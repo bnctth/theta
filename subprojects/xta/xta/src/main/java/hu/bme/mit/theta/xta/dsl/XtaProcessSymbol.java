@@ -138,6 +138,7 @@ final class XtaProcessSymbol implements Symbol, Scope {
                     env.define(variable, varDecl);
                     env.defineInParent(globalCopyOfVariable, varDecl);
                     process.getSystem().addClockVar(varDecl);
+                    process.getSystem().addLocalClockVar(process, varDecl);
                 } else if (instantiateResult.isDataVariable()) {
                     final VarDecl<?> varDecl = instantiateResult.asDataVariable().getVarDecl();
                     final LitExpr<?> initValue = instantiateResult.asDataVariable().getInitValue();
