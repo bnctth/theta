@@ -13,7 +13,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package hu.bme.mit.theta.analysis.localzone;
+package hu.bme.mit.theta.xta.local_analysis.localzone;
 
 import com.google.common.collect.ImmutableMap;
 import hu.bme.mit.theta.analysis.Prec;

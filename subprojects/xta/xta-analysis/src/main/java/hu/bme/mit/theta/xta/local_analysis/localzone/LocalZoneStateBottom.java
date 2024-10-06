@@ -1,4 +1,4 @@
-package hu.bme.mit.theta.analysis.localzone;
+package hu.bme.mit.theta.xta.local_analysis.localzone;
 
 import hu.bme.mit.theta.xta.XtaSystem;
 import hu.bme.mit.theta.xta.XtaProcess;

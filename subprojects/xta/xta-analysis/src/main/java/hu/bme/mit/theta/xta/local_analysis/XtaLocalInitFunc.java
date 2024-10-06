@@ -6,8 +6,9 @@ import java.util.Collection;
 import java.util.Collections;
 
 import hu.bme.mit.theta.analysis.InitFunc;
-import hu.bme.mit.theta.analysis.localzone.LocalZonePrec;
-import hu.bme.mit.theta.analysis.localzone.LocalZoneState;
+
+import hu.bme.mit.theta.xta.local_analysis.localzone.LocalZonePrec;
+import hu.bme.mit.theta.xta.local_analysis.localzone.LocalZoneState;
 
 final class XtaLocalInitFunc implements InitFunc<LocalZoneState, LocalZonePrec> {
 

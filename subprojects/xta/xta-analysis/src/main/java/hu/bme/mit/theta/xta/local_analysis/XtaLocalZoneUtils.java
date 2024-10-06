@@ -2,8 +2,8 @@ package hu.bme.mit.theta.xta.local_analysis;
 
 import com.google.common.collect.Lists;
 
-import hu.bme.mit.theta.analysis.localzone.LocalZonePrec;
-import hu.bme.mit.theta.analysis.localzone.LocalZoneState;
+import hu.bme.mit.theta.xta.local_analysis.localzone.LocalZonePrec;
+import hu.bme.mit.theta.xta.local_analysis.localzone.LocalZoneState;
 import hu.bme.mit.theta.core.clock.op.ResetOp;
 import hu.bme.mit.theta.core.decl.VarDecl;
 import hu.bme.mit.theta.core.type.rattype.RatType;
