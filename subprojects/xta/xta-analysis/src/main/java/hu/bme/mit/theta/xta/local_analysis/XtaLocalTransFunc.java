@@ -5,8 +5,8 @@ import java.util.Collection;
 import com.google.common.collect.ImmutableList;
 
 import hu.bme.mit.theta.analysis.TransFunc;
-import hu.bme.mit.theta.analysis.localzone.LocalZonePrec;
-import hu.bme.mit.theta.analysis.localzone.LocalZoneState;
+import hu.bme.mit.theta.xta.local_analysis.localzone.LocalZonePrec;
+import hu.bme.mit.theta.xta.local_analysis.localzone.LocalZoneState;
 import hu.bme.mit.theta.xta.analysis.XtaAction;
 
 final class XtaZoneTransFunc implements TransFunc<LocalZoneState, XtaAction, LocalZonePrec> {
