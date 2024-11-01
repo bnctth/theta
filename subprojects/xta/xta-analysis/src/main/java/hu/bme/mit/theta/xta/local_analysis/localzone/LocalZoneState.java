@@ -56,6 +56,7 @@ public class LocalZoneState implements ExprState {
 
     // Protected so that children classes can call the parent ctr
     protected LocalZoneState(final XtaSystem system) {
+        //TODO add local reference clock, to the last part
         for (var mapping : system.getProcessClockMap().entrySet()){
             localDBMs.put(mapping.getKey(), DBM.zero(mapping.getValue()));
         }
@@ -71,6 +72,14 @@ public class LocalZoneState implements ExprState {
 
     public Optional<DBM> getDbmForProcess(XtaProcess proc) {
         return Optional.ofNullable(localDBMs.get(proc));
+    }
+
+    public Map<XtaProcess, DBM> getLocalDbms() {
+        return localDBMs;
+    }
+
+    public void setDbmForProc(XtaProcess proc, DBM dbm) {
+        this.localDBMs.replace(proc, dbm);
     }
 
     private static Map<XtaProcess, DBM> twoOperandLocalZoneCalc(

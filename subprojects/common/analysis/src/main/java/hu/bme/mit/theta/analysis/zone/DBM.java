@@ -30,6 +30,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
+
 import hu.bme.mit.theta.common.container.Containers;
 import java.util.Map;
 import java.util.Set;
@@ -37,6 +39,7 @@ import java.util.function.BiFunction;
 import java.util.function.IntBinaryOperator;
 import java.util.function.IntConsumer;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.common.collect.Sets;
 
@@ -62,10 +65,13 @@ import hu.bme.mit.theta.core.clock.op.FreeOp;
 import hu.bme.mit.theta.core.clock.op.GuardOp;
 import hu.bme.mit.theta.core.clock.op.ResetOp;
 import hu.bme.mit.theta.core.clock.op.ShiftOp;
+import hu.bme.mit.theta.core.decl.Decls;
 import hu.bme.mit.theta.core.decl.VarDecl;
 import hu.bme.mit.theta.core.type.rattype.RatType;
 
 public final class DBM {
+
+    public record ProcessDbmPair (String processName, DBM processDbm) {}
 
 	private static final IntBinaryOperator ZERO_DBM_VALUES = (x, y) -> Leq(0);
 	private static final IntBinaryOperator TOP_DBM_VALUES = BasicDbm::defaultBound;
@@ -101,6 +107,57 @@ public final class DBM {
 	}
 
 	////
+    
+    public static DBM joinDbms(List<ProcessDbmPair> dbmsToJoin) {
+        List<VarDecl<RatType>> joinedList = new ArrayList<>(); 
+
+        for( var mapping : dbmsToJoin ) {
+	        List<VarDecl<RatType>> varDeclList = new ArrayList<>(mapping.processDbm().signature.toList());
+            varDeclList.set(0, Decls.Var("TempClock" + mapping.processName(), RatType.getInstance()));
+
+            joinedList.addAll(varDeclList);
+        }
+
+        DBM joinedDbm = new DBM(DbmSignature.over(Collections.unmodifiableList(joinedList)), TOP_DBM_VALUES); 
+        Integer offset = 1;
+        for ( var pair : dbmsToJoin ) {
+            DBM currentDbm = pair.processDbm();
+            int size = currentDbm.dbm.size();
+
+            // Leaving the zero clock out TODO check the offest both here and extract dbm
+            for (Integer x = 1; x < size; ++x){
+                for(Integer y = 1; y < size; ++y){
+                    // Building on the side effects of the increment operator
+                    joinedDbm.dbm.set(x + offset,y + offset, currentDbm.dbm.get(x,y));
+                }
+            }
+
+            offset += currentDbm.dbm.size();
+        }
+
+        return joinedDbm;
+    }
+
+    public List<DBM> extractDbms(List<ProcessDbmPair> originalDbms) {
+        List<DBM> outputDbmList = new ArrayList<>();
+
+        Integer offset = 1;
+        for ( var pair : originalDbms ) {
+            DBM updatedDbm = new DBM(pair.processDbm().signature, TOP_DBM_VALUES);
+            
+            for (int x = 1; x < updatedDbm.dbm.size(); ++x) {
+                for (int y = 1; y < updatedDbm.dbm.size(); ++y) {
+                    updatedDbm.dbm.set(x, y, this.dbm.get(x + offset, y + offset));
+                }
+            }
+            // Skipping the inserted temporary clocks
+            offset += updatedDbm.dbm.size(); 
+
+            outputDbmList.add(updatedDbm);
+        }
+
+        return outputDbmList;
+    }
 
 	public Collection<DBM> complement() {
 		final Collection<DBM> result = new ArrayList<>();

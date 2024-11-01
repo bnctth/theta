@@ -4,11 +4,16 @@ import com.google.common.collect.Lists;
 
 import hu.bme.mit.theta.xta.local_analysis.localzone.LocalZonePrec;
 import hu.bme.mit.theta.xta.local_analysis.localzone.LocalZoneState;
+import hu.bme.mit.theta.analysis.zone.DBM;
+import hu.bme.mit.theta.analysis.zone.ZonePrec;
+import hu.bme.mit.theta.analysis.zone.ZoneState;
+import hu.bme.mit.theta.common.container.Containers;
 import hu.bme.mit.theta.core.clock.op.ResetOp;
 import hu.bme.mit.theta.core.decl.VarDecl;
 import hu.bme.mit.theta.core.type.rattype.RatType;
 import hu.bme.mit.theta.xta.Guard;
 import hu.bme.mit.theta.xta.Update;
+import hu.bme.mit.theta.xta.XtaProcess;
 import hu.bme.mit.theta.xta.XtaProcess.Edge;
 import hu.bme.mit.theta.xta.XtaProcess.Loc;
 import hu.bme.mit.theta.xta.XtaProcess.LocKind;
@@ -16,9 +21,15 @@ import hu.bme.mit.theta.xta.analysis.XtaAction;
 import hu.bme.mit.theta.xta.analysis.XtaAction.BasicXtaAction;
 import hu.bme.mit.theta.xta.analysis.XtaAction.BinaryXtaAction;
 import hu.bme.mit.theta.xta.analysis.XtaAction.BroadcastXtaAction;
+import hu.bme.mit.theta.xta.analysis.zone.XtaZoneUtils;
 
+import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static hu.bme.mit.theta.core.clock.constr.ClockConstrs.Eq;
@@ -70,41 +81,47 @@ public final class XtaLocalZoneUtils {
     private static LocalZoneState postForBinaryAction(final LocalZoneState state,
                                                  final BinaryXtaAction action,
                                                  final LocalZonePrec prec) {
-        final LocalZoneState.Builder succStateBuilder = state.project(prec.getMapping());
-
         final List<Loc> sourceLocs = action.getSourceLocs();
         final Edge emittingEdge = action.getEmitEdge();
         final Edge receivingEdge = action.getRecvEdge();
         final List<Loc> targetLocs = action.getTargetLocs();
 
-        applyInvariants(succStateBuilder, sourceLocs);
-        applyGuards(succStateBuilder, emittingEdge);
-        applyGuards(succStateBuilder, receivingEdge);
-        applyUpdates(succStateBuilder, emittingEdge);
-        applyUpdates(succStateBuilder, receivingEdge);
-        applyInvariants(succStateBuilder, targetLocs);
+        List<DBM.ProcessDbmPair> actionDbmList= fixOrderedDbmList(targetLocs, state);
+        DBM jointDBM = DBM.joinDbms(actionDbmList);
+        //TODO normalize this it maybe called standardize also is there a virtual guard which makes sure that virtual
+        //clocks are the same
 
-        if (shouldApplyDelay(targetLocs)) {
-            applyDelay(succStateBuilder, targetLocs);
-        }
+        final ZoneState.Builder succStateBuilder = ZoneState.Builder.project(jointDBM);
 
-        final LocalZoneState succState = succStateBuilder.build();
-        return succState;
+        applySyncInvariants(succStateBuilder, sourceLocs);
+        applySyncGuards(succStateBuilder, emittingEdge);
+        applySyncGuards(succStateBuilder, receivingEdge);
+        applySyncUpdates(succStateBuilder, emittingEdge);
+        applySyncUpdates(succStateBuilder, receivingEdge);
+        applySyncInvariants(succStateBuilder, targetLocs);
+
+        applySyncDelay(succStateBuilder);
+
+        constructNewZone(targetLocs, jointDBM.extractDbms(actionDbmList), state);
+
+        return state;
     }
 
     private static LocalZoneState postForBroadcastAction(final LocalZoneState state,
                                                     final BroadcastXtaAction action,
                                                     final LocalZonePrec prec) {
-        final LocalZoneState.Builder succStateBuilder = state.project(prec.getMapping());
-
         final List<Loc> sourceLocs = action.getSourceLocs();
         final Edge emitEdge = action.getEmitEdge();
         final List<Edge> recvEdges = action.getRecvEdges();
         final List<Collection<Edge>> nonRecvEdgeCols = action.getNonRecvEdges();
         final List<Loc> targetLocs = action.getTargetLocs();
 
-        applyInvariants(succStateBuilder, sourceLocs);
-        applyGuards(succStateBuilder, emitEdge);
+        List<DBM.ProcessDbmPair> actionDbmList = fixOrderedDbmList(targetLocs, state);
+        DBM jointDBM = DBM.joinDbms(actionDbmList);
+
+        final ZoneState.Builder succStateBuilder = ZoneState.Builder.project(jointDBM);
+        applySyncInvariants(succStateBuilder, sourceLocs);
+        applySyncGuards(succStateBuilder, emitEdge);
 
         if (recvEdges.stream().anyMatch(XtaLocalZoneUtils::hasClockGuards)) {
             throw new UnsupportedOperationException(
@@ -117,24 +134,80 @@ public final class XtaLocalZoneUtils {
                     "Clock guards on edges with broadcast synchronization labels are not supported.");
         }
 
-        applyUpdates(succStateBuilder, emitEdge);
-        recvEdges.stream().forEachOrdered(recvEdge -> applyUpdates(succStateBuilder, recvEdge));
-        applyInvariants(succStateBuilder, targetLocs);
+        applySyncUpdates(succStateBuilder, emitEdge);
+        recvEdges.stream().forEachOrdered(recvEdge -> applySyncUpdates(succStateBuilder, recvEdge));
+        applySyncInvariants(succStateBuilder, targetLocs);
 
-        if (shouldApplyDelay(targetLocs)) {
-            applyDelay(succStateBuilder, targetLocs);
-        }
+        applySyncDelay(succStateBuilder);
 
-        final LocalZoneState succState = succStateBuilder.build();
-        return succState;
+        constructNewZone(targetLocs, jointDBM.extractDbms(actionDbmList), state);
+
+        return state;
     }
+
 
     private static boolean hasClockGuards(Edge edge) {
         return edge.getGuards().stream().anyMatch(Guard::isClockGuard);
     }
 
-    ////
+    private static List<DBM.ProcessDbmPair> fixOrderedDbmList(final List<Loc> targetLocs, final LocalZoneState zone) {
+        List<DBM.ProcessDbmPair> targetProcDbmMap = new ArrayList<>();
+        for( var loc : targetLocs )
+            targetProcDbmMap.add(new DBM.ProcessDbmPair( 
+              loc.getProc().getName(), zone.getDbmForProcess(loc.getProc()).get()  
+            ));
+            
+        return targetProcDbmMap;
+    }
 
+    private static void constructNewZone(List<Loc> orderOfProcesses, List<DBM> changedDbms, 
+                                            LocalZoneState state) {
+        for (var loc : orderOfProcesses)
+            state.setDbmForProc(loc.getProc(), changedDbms.remove(0));
+    }
+
+    ////
+    //
+    // A horrible copy paste from XtaZoneUtils, but they are private functions and I don't have time to solve this.
+    // PS: Java sucks, use C++
+	private static void applySyncInvariants(final ZoneState.Builder builder, final Collection<Loc> locs) {
+		for (final Loc target : locs) {
+			for (final Guard invar : target.getInvars()) {
+				if (invar.isClockGuard()) {
+					builder.and(invar.asClockGuard().getClockConstr());
+				}
+			}
+		}
+	}
+
+	private static void applySyncGuards(final ZoneState.Builder builder, final Edge edge) {
+		for (final Guard guard : edge.getGuards()) {
+			if (guard.isClockGuard()) {
+				builder.and(guard.asClockGuard().getClockConstr());
+			}
+		}
+	}
+
+	private static void applySyncUpdates(final ZoneState.Builder builder, final Edge edge) {
+		for (final Update update : edge.getUpdates()) {
+			if (update.isClockUpdate()) {
+				final ResetOp op = (ResetOp) update.asClockUpdate().getClockOp();
+				final VarDecl<RatType> varDecl = op.getVar();
+				final int value = op.getValue();
+				builder.reset(varDecl, value);
+			}
+		}
+	}
+
+
+	private static void applySyncDelay(final ZoneState.Builder builder) {
+		builder.nonnegative();
+		builder.up();
+	}
+
+    
+    ////
+    //
     public static LocalZoneState pre(final LocalZoneState state, final XtaAction action,
                                 final LocalZonePrec prec) {
         checkNotNull(state);

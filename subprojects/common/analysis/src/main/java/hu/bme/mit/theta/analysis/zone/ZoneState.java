@@ -237,6 +237,10 @@ public final class ZoneState implements ExprState {
 			return new Builder(DBM.copyOf(state.dbm));
 		}
 
+        public static Builder project(final DBM dbm) {
+            return new Builder(DBM.copyOf(dbm));
+        }
+
 		private static Builder project(final ZoneState state, final Collection<? extends VarDecl<RatType>> clocks) {
 			return new Builder(DBM.project(state.dbm, clocks));
 		}
