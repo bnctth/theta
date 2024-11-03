@@ -2,6 +2,9 @@ package hu.bme.mit.theta.xta.local_analysis;
 
 import com.google.common.collect.Lists;
 
+import hu.bme.mit.theta.core.clock.constr.ClockConstrs;
+import hu.bme.mit.theta.core.clock.constr.DiffEqConstr;
+import hu.bme.mit.theta.core.clock.constr.UnitEqConstr;
 import hu.bme.mit.theta.xta.local_analysis.localzone.LocalZonePrec;
 import hu.bme.mit.theta.xta.local_analysis.localzone.LocalZoneState;
 import hu.bme.mit.theta.analysis.zone.DBM;
@@ -88,8 +91,8 @@ public final class XtaLocalZoneUtils {
 
         List<DBM.ProcessDbmPair> actionDbmList= fixOrderedDbmList(targetLocs, state);
         DBM jointDBM = DBM.joinDbms(actionDbmList);
-        //TODO normalize this it maybe called standardize also is there a virtual guard which makes sure that virtual
-        //clocks are the same
+        applyVirtualGuards(targetLocs, jointDBM, state);
+
 
         final ZoneState.Builder succStateBuilder = ZoneState.Builder.project(jointDBM);
 
@@ -118,6 +121,7 @@ public final class XtaLocalZoneUtils {
 
         List<DBM.ProcessDbmPair> actionDbmList = fixOrderedDbmList(targetLocs, state);
         DBM jointDBM = DBM.joinDbms(actionDbmList);
+        applyVirtualGuards(targetLocs, jointDBM, state);
 
         final ZoneState.Builder succStateBuilder = ZoneState.Builder.project(jointDBM);
         applySyncInvariants(succStateBuilder, sourceLocs);
@@ -166,10 +170,21 @@ public final class XtaLocalZoneUtils {
             state.setDbmForProc(loc.getProc(), changedDbms.remove(0));
     }
 
+    private static void applyVirtualGuards(final List<Loc> locs, DBM jointDBM, LocalZoneState state) {
+        Integer index = 0;
+        Integer slidingIndex = 1;
+
+        for(; slidingIndex < locs.size();) {
+            DBM firstDbm = state.getDbmForProcess(locs.get(index).getProc()).get();
+            DBM secondDbm = state.getDbmForProcess(locs.get(slidingIndex).getProc()).get();
+
+            jointDBM.and(ClockConstrs.Eq(firstDbm.getLastVarDecl(), secondDbm.getLastVarDecl(), 0));
+        }
+    }
+
     ////
     //
     // A horrible copy paste from XtaZoneUtils, but they are private functions and I don't have time to solve this.
-    // PS: Java sucks, use C++
 	private static void applySyncInvariants(final ZoneState.Builder builder, final Collection<Loc> locs) {
 		for (final Loc target : locs) {
 			for (final Guard invar : target.getInvars()) {
