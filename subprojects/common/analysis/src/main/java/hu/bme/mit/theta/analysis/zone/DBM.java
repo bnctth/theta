@@ -107,32 +107,51 @@ public final class DBM {
 	}
 
 	////
-    
+	// This is horrible, hurts encapsulation, and should be replaced
+	// However I have one day until the deadline, so I will leave it as is
+	// The local reference clock is put at the end of the signature list, this why it's called here
+	public VarDecl<RatType> getLastVarDecl() {
+		return signature.getVar(signature.size() - 1);
+	}
+
     public static DBM joinDbms(List<ProcessDbmPair> dbmsToJoin) {
         List<VarDecl<RatType>> joinedList = new ArrayList<>(); 
 
         for( var mapping : dbmsToJoin ) {
 	        List<VarDecl<RatType>> varDeclList = new ArrayList<>(mapping.processDbm().signature.toList());
-            varDeclList.set(0, Decls.Var("TempClock" + mapping.processName(), RatType.getInstance()));
+			// Removing the zero clock, this is true only for the dbm copy, the original dbm is not modified
+            varDeclList.remove(0);
 
             joinedList.addAll(varDeclList);
         }
 
         DBM joinedDbm = new DBM(DbmSignature.over(Collections.unmodifiableList(joinedList)), TOP_DBM_VALUES); 
-        Integer offset = 1;
+        Integer offset = 0;
         for ( var pair : dbmsToJoin ) {
             DBM currentDbm = pair.processDbm();
             int size = currentDbm.dbm.size();
 
-            // Leaving the zero clock out TODO check the offest both here and extract dbm
+            // Leaving the zero clock out and filling the clock constraints
             for (Integer x = 1; x < size; ++x){
                 for(Integer y = 1; y < size; ++y){
-                    // Building on the side effects of the increment operator
                     joinedDbm.dbm.set(x + offset,y + offset, currentDbm.dbm.get(x,y));
                 }
             }
 
-            offset += currentDbm.dbm.size();
+			// Adding the local reference clock constraints for rows
+			for (Integer x = 1; x < size; ++x){
+				joinedDbm.dbm.set(x + offset, 0, currentDbm.dbm.get(x, 0));
+			}
+
+			// Adding the local reference clock constraints for columns
+			for (Integer y = 1; y < size; ++y){
+				joinedDbm.dbm.set(0, y + offset, currentDbm.dbm.get(0, y));
+			}
+
+
+			// -1 beacuse the original size is altered
+			// IN other cases this is okay because it starts from 1
+            offset += currentDbm.dbm.size() - 1;
         }
 
         return joinedDbm;
@@ -141,17 +160,29 @@ public final class DBM {
     public List<DBM> extractDbms(List<ProcessDbmPair> originalDbms) {
         List<DBM> outputDbmList = new ArrayList<>();
 
-        Integer offset = 1;
+        Integer offset = 0;
         for ( var pair : originalDbms ) {
             DBM updatedDbm = new DBM(pair.processDbm().signature, TOP_DBM_VALUES);
+			Integer size = pair.processDbm().dbm.size();
             
-            for (int x = 1; x < updatedDbm.dbm.size(); ++x) {
-                for (int y = 1; y < updatedDbm.dbm.size(); ++y) {
+            for (int x = 1; x < size; ++x) {
+                for (int y = 1; y < size; ++y) {
                     updatedDbm.dbm.set(x, y, this.dbm.get(x + offset, y + offset));
                 }
             }
+
+			// Restoring the local reference clock constraints for rows
+			for (int x = 1; x < size; ++x){
+				updatedDbm.dbm.set(x, 0, this.dbm.get(x + offset, 0));
+			}
+
+			// Restoring the local reference clock constraints for columns
+			for (int y = 1; y < size; ++y){
+				updatedDbm.dbm.set(0, y, this.dbm.get(0, y + offset));
+			}
+
             // Skipping the inserted temporary clocks
-            offset += updatedDbm.dbm.size(); 
+            offset += size - 1;
 
             outputDbmList.add(updatedDbm);
         }

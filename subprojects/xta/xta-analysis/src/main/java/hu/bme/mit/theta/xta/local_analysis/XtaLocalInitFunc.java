@@ -10,20 +10,20 @@ import hu.bme.mit.theta.analysis.InitFunc;
 import hu.bme.mit.theta.xta.local_analysis.localzone.LocalZonePrec;
 import hu.bme.mit.theta.xta.local_analysis.localzone.LocalZoneState;
 
-final class XtaLocalInitFunc implements InitFunc<LocalZoneState, LocalZonePrec> {
+public final class XtaLocalInitFunc implements InitFunc<LocalZoneState, LocalZonePrec> {
 
     private static final XtaLocalInitFunc INSTANCE = new XtaLocalInitFunc();
 
     private XtaLocalInitFunc() {
     }
 
-    static XtaLocalInitFunc getInstance() {
+    public static XtaLocalInitFunc getInstance() {
         return INSTANCE;
     }
 
     @Override
     public Collection<? extends LocalZoneState> getInitStates(LocalZonePrec prec) {
         checkNotNull(prec);
-        return Collections.singleton(LocalZoneState.zero(prec.getMapping()).transform().up().build());
+        return Collections.singleton(LocalZoneState.zero(prec.getMapping(), false).transform().up().build());
     }
 }

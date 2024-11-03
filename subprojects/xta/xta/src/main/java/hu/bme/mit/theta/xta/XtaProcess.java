@@ -266,6 +266,9 @@ public final class XtaProcess {
         }
     }
 
+    public boolean equals(XtaProcess process) {
+        return this.name.equals(process.name);
+    }
     ////
 
     public final class Edge {

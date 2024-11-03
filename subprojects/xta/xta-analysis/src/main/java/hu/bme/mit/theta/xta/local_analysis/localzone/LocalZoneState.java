@@ -18,10 +18,7 @@ package hu.bme.mit.theta.xta.local_analysis.localzone;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 
 import hu.bme.mit.theta.analysis.expr.ExprState;
@@ -32,6 +29,7 @@ import hu.bme.mit.theta.common.Utils;
 import hu.bme.mit.theta.common.container.Containers;
 import hu.bme.mit.theta.core.clock.constr.ClockConstr;
 import hu.bme.mit.theta.core.clock.op.ClockOp;
+import hu.bme.mit.theta.core.decl.Decls;
 import hu.bme.mit.theta.core.decl.VarDecl;
 import hu.bme.mit.theta.core.type.Expr;
 import hu.bme.mit.theta.core.type.booltype.BoolType;
@@ -56,9 +54,11 @@ public class LocalZoneState implements ExprState {
 
     // Protected so that children classes can call the parent ctr
     protected LocalZoneState(final XtaSystem system) {
-        //TODO add local reference clock, to the last part
         for (var mapping : system.getProcessClockMap().entrySet()){
-            localDBMs.put(mapping.getKey(), DBM.zero(mapping.getValue()));
+            XtaProcess process = mapping.getKey();
+            Collection<VarDecl<RatType>> localSignature = mapping.getValue();
+            //localSignature.add(Decls.Var("LocalRefClock_" + process.getName(),  RatType.getInstance()));
+            localDBMs.put(process, DBM.zero(localSignature));
         }
     }
 
@@ -71,7 +71,13 @@ public class LocalZoneState implements ExprState {
     }
 
     public Optional<DBM> getDbmForProcess(XtaProcess proc) {
-        return Optional.ofNullable(localDBMs.get(proc));
+        for (var mapping : this.localDBMs.entrySet()){
+            if (mapping.getKey().equals(proc)){
+                    DBM find = mapping.getValue();
+                    return Optional.ofNullable(find);
+            }
+        }
+        return Optional.empty();
     }
 
     public Map<XtaProcess, DBM> getLocalDbms() {
@@ -104,11 +110,13 @@ public class LocalZoneState implements ExprState {
         return toReturn;
     }
 
-    // TODO had to remove ? extends here as well
-    public static LocalZoneState zero(final Map<XtaProcess, Collection<VarDecl<RatType>>> clocksProcessMap) {
+    public static LocalZoneState zero(final Map<XtaProcess, Collection<VarDecl<RatType>>> clocksProcessMap, boolean addLocalRef) {
         Map<XtaProcess, DBM> tmp = Containers.createMap();
         for (var mapping : clocksProcessMap.entrySet()){
-            tmp.put(mapping.getKey(), DBM.zero(mapping.getValue()));
+            Collection<VarDecl<RatType>> localSignature = mapping.getValue();
+            if (addLocalRef)
+                localSignature.add(Decls.Var("LocalRefClock_" + mapping.getKey().getName(),  RatType.getInstance()));
+            tmp.put(mapping.getKey(), DBM.zero(localSignature));
         }
 
         return new LocalZoneState(tmp);
