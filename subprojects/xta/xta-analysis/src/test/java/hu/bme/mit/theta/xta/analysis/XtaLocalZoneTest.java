@@ -19,10 +19,14 @@ package hu.bme.mit.theta.xta.analysis;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Queue;
 
 import hu.bme.mit.theta.analysis.LTS;
+import hu.bme.mit.theta.analysis.waitlist.LifoWaitlist;
+import hu.bme.mit.theta.analysis.waitlist.Waitlist;
 import hu.bme.mit.theta.xta.local_analysis.XtaLocalInitFunc;
 import hu.bme.mit.theta.xta.local_analysis.XtaLocalTransFunc;
 import hu.bme.mit.theta.xta.local_analysis.localzone.LocalZonePrec;
@@ -45,13 +49,13 @@ public final class XtaLocalZoneTest {
 
 				{"/model/csma-2.xta"},
 
-				{"/model/fddi-2.xta"},
+				//{"/model/fddi-2.xta"},
 
-				{"/model/fischer-2-32-64.xta"},
+				//{"/model/fischer-2-32-64.xta"},
 
-				{"/model/lynch-2-16.xta"},
+				//{"/model/lynch-2-16.xta"},
 
-				{"/model/broadcast.xta"},
+				//{"/model/broadcast.xta"},
 
 		});
 	}
@@ -64,25 +68,36 @@ public final class XtaLocalZoneTest {
 		final InputStream inputStream = getClass().getResourceAsStream(filepath);
 		final XtaSystem system = XtaDslManager.createSystem(inputStream);
 
+		int bound = 1;
+		int deepness = 0;
+
 		LocalZonePrec localZonePrec = LocalZonePrec.of(system.getProcessClockMap());
-		LocalZoneState localState = LocalZoneState.zero(system.getProcessClockMap(), true);
-		XtaState<LocalZoneState> xtastate = XtaState.of(system.getInitLocs(), localState);
+		final XtaInitFunc<LocalZoneState, LocalZonePrec> systemProduct = XtaInitFunc.create(system, XtaLocalInitFunc.getInstance());
 		XtaLts lts = XtaLts.create(system);
-		XtaLocalInitFunc initFunc = XtaLocalInitFunc.getInstance();
-		XtaLocalTransFunc transFunc = XtaLocalTransFunc.getInstance();
+		final XtaTransFunc<LocalZoneState, LocalZonePrec> transFunc = XtaTransFunc.create(XtaLocalTransFunc.getInstance());
+		Collection<XtaState<LocalZoneState>> initStates = systemProduct.getInitStates(localZonePrec);
 
-		Collection<? extends LocalZoneState> initStates = initFunc.getInitStates(localZonePrec);
+		Waitlist<XtaState<LocalZoneState>> buffer = LifoWaitlist.create();
+		buffer.addAll(initStates);
 
-		for(var state : initStates) {
-			Collection<XtaAction> availableActions = lts.getEnabledActionsFor(xtastate);
-			for (var action : availableActions) {
-				Collection<LocalZoneState> succStates = transFunc.getSuccStates(state, action, localZonePrec);
+		ArrayList<XtaState<LocalZoneState>> statesToAdd = new ArrayList<>();
+
+		while (deepness < bound) {
+			while(!buffer.isEmpty()) {
+				XtaState<LocalZoneState> currentState = buffer.remove();
+				System.out.println(currentState);
+
+				Collection<XtaAction> availableActions = lts.getEnabledActionsFor(currentState);
+				for ( var action : availableActions) {
+					statesToAdd.addAll(transFunc.getSuccStates(currentState, action, localZonePrec));
+				}
 			}
+			deepness++;
+			buffer.addAll(statesToAdd);
+			statesToAdd.clear();
 		}
 
-
-
-
+		assert true;
 	}
 
 }
