@@ -146,16 +146,8 @@ final class BasicDbm {
 		} else if (b < matrix.get(x, y)) {
 			matrix.set(x, y, b);
 
-			for (int i = 0; i <= nClocks; i++) {
-				for (int j = 0; j <= nClocks; j++) {
-					if (add(matrix.get(i, x), matrix.get(x, j)) < matrix.get(i, j)) {
-						matrix.set(i, j, add(matrix.get(i, x), matrix.get(x, j)));
-					}
-					if (add(matrix.get(i, y), matrix.get(y, j)) < matrix.get(i, j)) {
-						matrix.set(i, j, add(matrix.get(i, y), matrix.get(y, j)));
-					}
-				}
-			}
+			//TODO close should be called here
+			this.close();
 		}
 		assert !isConsistent() || isClosed();
 	}
