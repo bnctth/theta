@@ -8,9 +8,14 @@ import java.util.Collections;
 import java.util.Optional;
 
 public class LocalZoneStateBottom extends LocalZoneState {
-    private LocalZoneStateBottom(final XtaSystem system) {
-        super(system);
+
+    private final static LocalZoneStateBottom INSTANCE = new LocalZoneStateBottom();
+
+    private LocalZoneStateBottom() {
+        super();
     }
+
+    public static LocalZoneStateBottom getInstance() { return INSTANCE; }
 
     @Override
     public Optional<DBM> getDbmForProcess(XtaProcess proc) {

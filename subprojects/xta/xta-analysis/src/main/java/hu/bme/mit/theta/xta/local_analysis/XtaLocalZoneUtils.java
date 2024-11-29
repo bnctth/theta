@@ -105,7 +105,7 @@ public final class XtaLocalZoneUtils {
 
         applySyncDelay(succStateBuilder);
 
-        constructNewZone(targetLocs, jointDBM.extractDbms(actionDbmList), state);
+        constructNewZone(targetLocs, succStateBuilder.getDbm().extractDbms(actionDbmList), state);
 
         return state;
     }
@@ -179,6 +179,8 @@ public final class XtaLocalZoneUtils {
             DBM secondDbm = state.getDbmForProcess(locs.get(slidingIndex).getProc()).get();
 
             jointDBM.and(ClockConstrs.Eq(firstDbm.getLastVarDecl(), secondDbm.getLastVarDecl(), 0));
+            index++;
+            slidingIndex++;
         }
     }
 
