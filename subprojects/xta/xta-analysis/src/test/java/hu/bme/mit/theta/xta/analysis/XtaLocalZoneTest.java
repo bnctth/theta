@@ -49,13 +49,15 @@ public final class XtaLocalZoneTest {
 
 				{"/model/csma-2.xta"},
 
-				//{"/model/fddi-2.xta"},
+				{"/model/fddi-2.xta"},
 
-				//{"/model/fischer-2-32-64.xta"},
+				{"/model/fischer-2-32-64.xta"},
 
-				//{"/model/lynch-2-16.xta"},
+				{"/model/lynch-2-16.xta"},
 
-				//{"/model/broadcast.xta"},
+				//{"/model/broadcast.xta"}, There are n+
+				//
+				// +o clock variables in this model! How does this work in global zone state?
 
 		});
 	}
@@ -68,7 +70,7 @@ public final class XtaLocalZoneTest {
 		final InputStream inputStream = getClass().getResourceAsStream(filepath);
 		final XtaSystem system = XtaDslManager.createSystem(inputStream);
 
-		int bound = 1;
+		int bound = 10;
 		int deepness = 0;
 
 		LocalZonePrec localZonePrec = LocalZonePrec.of(system.getProcessClockMap());

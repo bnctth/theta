@@ -245,6 +245,11 @@ public final class ZoneState implements ExprState {
 			return new Builder(DBM.project(state.dbm, clocks));
 		}
 
+		//TODO: WARNING! this is really stupid and used as a hack, later should be refactored
+		public DBM getDbm() {
+			return dbm;
+		}
+
 		////
 
 		public ZoneState build() {

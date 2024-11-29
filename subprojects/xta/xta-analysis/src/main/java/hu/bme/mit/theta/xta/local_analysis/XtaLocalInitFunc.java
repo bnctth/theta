@@ -24,6 +24,6 @@ public final class XtaLocalInitFunc implements InitFunc<LocalZoneState, LocalZon
     @Override
     public Collection<? extends LocalZoneState> getInitStates(LocalZonePrec prec) {
         checkNotNull(prec);
-        return Collections.singleton(LocalZoneState.zero(prec.getMapping(), false).transform().up().build());
+        return Collections.singleton(LocalZoneState.zero(prec.getMapping(), true).transform().up().build());
     }
 }

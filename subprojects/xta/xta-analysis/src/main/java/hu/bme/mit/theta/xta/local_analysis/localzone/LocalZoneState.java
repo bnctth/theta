@@ -52,6 +52,9 @@ public class LocalZoneState implements ExprState {
 
     private  Map<XtaProcess, DBM> localDBMs = Containers.createMap();
 
+    // DO NOT use this, this is only used in derived classes
+    protected LocalZoneState() {}
+
     // Protected so that children classes can call the parent ctr
     protected LocalZoneState(final XtaSystem system) {
         for (var mapping : system.getProcessClockMap().entrySet()){
