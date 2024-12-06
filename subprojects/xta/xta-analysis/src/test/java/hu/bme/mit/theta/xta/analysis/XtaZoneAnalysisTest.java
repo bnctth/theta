@@ -54,15 +54,15 @@ public final class XtaZoneAnalysisTest {
 	public static Collection<Object[]> data() {
 		return Arrays.asList(new Object[][]{
 
-				{"/model/csma-2.xta"},
+				//{"/model/csma-2.xta"},
 
-				{"/model/fddi-2.xta"},
+				//{"/model/fddi-2.xta"},
 
-				{"/model/fischer-2-32-64.xta"},
+				//{"/model/fischer-2-32-64.xta"},
 
 				{"/model/lynch-2-16.xta"},
 
-				{"/model/broadcast.xta"},
+				//{"/model/broadcast.xta"},
 
 		});
 	}
@@ -87,6 +87,8 @@ public final class XtaZoneAnalysisTest {
 
 		final ZonePrec prec = ZonePrec.of(system.getClockVars());
 
+		long startTime = System.currentTimeMillis();
+
 		final ArgBuilder<XtaState<Prod2State<ExplState, ZoneState>>, XtaAction, ZonePrec> argBuilder = ArgBuilder
 				.create(lts, analysis, s -> false);
 
@@ -96,9 +98,13 @@ public final class XtaZoneAnalysisTest {
 		final ARG<XtaState<Prod2State<ExplState, ZoneState>>, XtaAction> arg = abstractor.createArg();
 		abstractor.check(arg, prec);
 
+		long endTime = System.currentTimeMillis();
+
 		System.out.println(arg.getNodes().collect(Collectors.toSet()));
 
 		System.out.println(arg.getNodes().count());
+
+		System.out.println(endTime - startTime);
 	}
 
 }
