@@ -3,20 +3,15 @@ package hu.bme.mit.theta.xta.local_analysis;
 import com.google.common.collect.Lists;
 
 import hu.bme.mit.theta.core.clock.constr.ClockConstrs;
-import hu.bme.mit.theta.core.clock.constr.DiffEqConstr;
-import hu.bme.mit.theta.core.clock.constr.UnitEqConstr;
 import hu.bme.mit.theta.xta.local_analysis.localzone.LocalZonePrec;
 import hu.bme.mit.theta.xta.local_analysis.localzone.LocalZoneState;
 import hu.bme.mit.theta.analysis.zone.DBM;
-import hu.bme.mit.theta.analysis.zone.ZonePrec;
 import hu.bme.mit.theta.analysis.zone.ZoneState;
-import hu.bme.mit.theta.common.container.Containers;
 import hu.bme.mit.theta.core.clock.op.ResetOp;
 import hu.bme.mit.theta.core.decl.VarDecl;
 import hu.bme.mit.theta.core.type.rattype.RatType;
 import hu.bme.mit.theta.xta.Guard;
 import hu.bme.mit.theta.xta.Update;
-import hu.bme.mit.theta.xta.XtaProcess;
 import hu.bme.mit.theta.xta.XtaProcess.Edge;
 import hu.bme.mit.theta.xta.XtaProcess.Loc;
 import hu.bme.mit.theta.xta.XtaProcess.LocKind;
@@ -24,15 +19,10 @@ import hu.bme.mit.theta.xta.analysis.XtaAction;
 import hu.bme.mit.theta.xta.analysis.XtaAction.BasicXtaAction;
 import hu.bme.mit.theta.xta.analysis.XtaAction.BinaryXtaAction;
 import hu.bme.mit.theta.xta.analysis.XtaAction.BroadcastXtaAction;
-import hu.bme.mit.theta.xta.analysis.zone.XtaZoneUtils;
 
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static hu.bme.mit.theta.core.clock.constr.ClockConstrs.Eq;
@@ -43,7 +33,7 @@ public final class XtaLocalZoneUtils {
     }
 
     public static LocalZoneState post(final LocalZoneState state, final XtaAction action,
-                                 final LocalZonePrec prec) {
+                                      final LocalZonePrec prec) {
         checkNotNull(state);
         checkNotNull(action);
         checkNotNull(prec);
@@ -60,7 +50,7 @@ public final class XtaLocalZoneUtils {
     }
 
     private static LocalZoneState postForBasicAction(final LocalZoneState state, final BasicXtaAction action,
-                                                final LocalZonePrec prec) {
+                                                     final LocalZonePrec prec) {
         final LocalZoneState.Builder succStateBuilder = state.project(prec.getMapping());
 
         final List<Loc> sourceLocs = action.getSourceLocs();
@@ -82,14 +72,14 @@ public final class XtaLocalZoneUtils {
     }
 
     private static LocalZoneState postForBinaryAction(final LocalZoneState state,
-                                                 final BinaryXtaAction action,
-                                                 final LocalZonePrec prec) {
+                                                      final BinaryXtaAction action,
+                                                      final LocalZonePrec prec) {
         final List<Loc> sourceLocs = action.getSourceLocs();
         final Edge emittingEdge = action.getEmitEdge();
         final Edge receivingEdge = action.getRecvEdge();
         final List<Loc> targetLocs = action.getTargetLocs();
 
-        List<DBM.ProcessDbmPair> actionDbmList= fixOrderedDbmList(targetLocs, state);
+        List<DBM.ProcessDbmPair> actionDbmList = fixOrderedDbmList(targetLocs, state);
         DBM jointDBM = DBM.joinDbms(actionDbmList);
         applyVirtualGuards(targetLocs, jointDBM, state);
 
@@ -111,8 +101,8 @@ public final class XtaLocalZoneUtils {
     }
 
     private static LocalZoneState postForBroadcastAction(final LocalZoneState state,
-                                                    final BroadcastXtaAction action,
-                                                    final LocalZonePrec prec) {
+                                                         final BroadcastXtaAction action,
+                                                         final LocalZonePrec prec) {
         final List<Loc> sourceLocs = action.getSourceLocs();
         final Edge emitEdge = action.getEmitEdge();
         final List<Edge> recvEdges = action.getRecvEdges();
@@ -156,16 +146,16 @@ public final class XtaLocalZoneUtils {
 
     private static List<DBM.ProcessDbmPair> fixOrderedDbmList(final List<Loc> targetLocs, final LocalZoneState zone) {
         List<DBM.ProcessDbmPair> targetProcDbmMap = new ArrayList<>();
-        for( var loc : targetLocs )
-            targetProcDbmMap.add(new DBM.ProcessDbmPair( 
-              loc.getProc().getName(), zone.getDbmForProcess(loc.getProc()).get()  
+        for (var loc : targetLocs)
+            targetProcDbmMap.add(new DBM.ProcessDbmPair(
+                    loc.getProc().getName(), zone.getDbmForProcess(loc.getProc()).get()
             ));
-            
+
         return targetProcDbmMap;
     }
 
-    private static void constructNewZone(List<Loc> orderOfProcesses, List<DBM> changedDbms, 
-                                            LocalZoneState state) {
+    private static void constructNewZone(List<Loc> orderOfProcesses, List<DBM> changedDbms,
+                                         LocalZoneState state) {
         for (var loc : orderOfProcesses)
             state.setDbmForProc(loc.getProc(), changedDbms.remove(0));
     }
@@ -174,7 +164,7 @@ public final class XtaLocalZoneUtils {
         Integer index = 0;
         Integer slidingIndex = 1;
 
-        for(; slidingIndex < locs.size();) {
+        for (; slidingIndex < locs.size(); ) {
             DBM firstDbm = state.getDbmForProcess(locs.get(index).getProc()).get();
             DBM secondDbm = state.getDbmForProcess(locs.get(slidingIndex).getProc()).get();
 
@@ -184,49 +174,49 @@ public final class XtaLocalZoneUtils {
         }
     }
 
-    ////
+    /// /
     //
     // A horrible copy paste from XtaZoneUtils, but they are private functions and I don't have time to solve this.
-	private static void applySyncInvariants(final ZoneState.Builder builder, final Collection<Loc> locs) {
-		for (final Loc target : locs) {
-			for (final Guard invar : target.getInvars()) {
-				if (invar.isClockGuard()) {
-					builder.and(invar.asClockGuard().getClockConstr());
-				}
-			}
-		}
-	}
+    private static void applySyncInvariants(final ZoneState.Builder builder, final Collection<Loc> locs) {
+        for (final Loc target : locs) {
+            for (final Guard invar : target.getInvars()) {
+                if (invar.isClockGuard()) {
+                    builder.and(invar.asClockGuard().getClockConstr());
+                }
+            }
+        }
+    }
 
-	private static void applySyncGuards(final ZoneState.Builder builder, final Edge edge) {
-		for (final Guard guard : edge.getGuards()) {
-			if (guard.isClockGuard()) {
-				builder.and(guard.asClockGuard().getClockConstr());
-			}
-		}
-	}
+    private static void applySyncGuards(final ZoneState.Builder builder, final Edge edge) {
+        for (final Guard guard : edge.getGuards()) {
+            if (guard.isClockGuard()) {
+                builder.and(guard.asClockGuard().getClockConstr());
+            }
+        }
+    }
 
-	private static void applySyncUpdates(final ZoneState.Builder builder, final Edge edge) {
-		for (final Update update : edge.getUpdates()) {
-			if (update.isClockUpdate()) {
-				final ResetOp op = (ResetOp) update.asClockUpdate().getClockOp();
-				final VarDecl<RatType> varDecl = op.getVar();
-				final int value = op.getValue();
-				builder.reset(varDecl, value);
-			}
-		}
-	}
+    private static void applySyncUpdates(final ZoneState.Builder builder, final Edge edge) {
+        for (final Update update : edge.getUpdates()) {
+            if (update.isClockUpdate()) {
+                final ResetOp op = (ResetOp) update.asClockUpdate().getClockOp();
+                final VarDecl<RatType> varDecl = op.getVar();
+                final int value = op.getValue();
+                builder.reset(varDecl, value);
+            }
+        }
+    }
 
 
-	private static void applySyncDelay(final ZoneState.Builder builder) {
-		builder.nonnegative();
-		builder.up();
-	}
+    private static void applySyncDelay(final ZoneState.Builder builder) {
+        builder.nonnegative();
+        builder.up();
+    }
 
-    
-    ////
+
+    /// /
     //
     public static LocalZoneState pre(final LocalZoneState state, final XtaAction action,
-                                final LocalZonePrec prec) {
+                                     final LocalZonePrec prec) {
         checkNotNull(state);
         checkNotNull(action);
         checkNotNull(prec);
@@ -243,7 +233,7 @@ public final class XtaLocalZoneUtils {
     }
 
     private static LocalZoneState preForBasicAction(final LocalZoneState state, final BasicXtaAction action,
-                                               final LocalZonePrec prec) {
+                                                    final LocalZonePrec prec) {
         final LocalZoneState.Builder preStateBuilder = state.project(prec.getMapping());
 
         final List<Loc> sourceLocs = action.getSourceLocs();
@@ -264,7 +254,7 @@ public final class XtaLocalZoneUtils {
     }
 
     private static LocalZoneState preForBinaryAction(final LocalZoneState state, final BinaryXtaAction action,
-                                                final LocalZonePrec prec) {
+                                                     final LocalZonePrec prec) {
         final LocalZoneState.Builder preStateBuilder = state.project(prec.getMapping());
 
         final List<Loc> sourceLocs = action.getSourceLocs();
@@ -288,8 +278,8 @@ public final class XtaLocalZoneUtils {
     }
 
     private static LocalZoneState preForBroadcastAction(final LocalZoneState state,
-                                                   final BroadcastXtaAction action,
-                                                   final LocalZonePrec prec) {
+                                                        final BroadcastXtaAction action,
+                                                        final LocalZonePrec prec) {
         final LocalZoneState.Builder preStateBuilder = state.project(prec.getMapping());
 
         final List<Loc> sourceLocs = action.getSourceLocs();
@@ -325,7 +315,7 @@ public final class XtaLocalZoneUtils {
         return succState;
     }
 
-    ////
+    /// /
 
     private static boolean shouldApplyDelay(final List<Loc> locs) {
         return locs.stream().allMatch(l -> l.getKind() == LocKind.NORMAL);
@@ -334,14 +324,14 @@ public final class XtaLocalZoneUtils {
     // This needs altering
     private static void applyDelay(final LocalZoneState.Builder builder, List<Loc> involvedLocs) {
         builder.nonnegative();
-        for(var loc : involvedLocs) {
+        for (var loc : involvedLocs) {
             builder.localUp(loc.getProc());
         }
     }
 
     // This needs altering
     private static void applyInverseDelay(final LocalZoneState.Builder builder, List<Loc> involvedLocs) {
-        for(var loc : involvedLocs) {
+        for (var loc : involvedLocs) {
             builder.localDown(loc.getProc());
         }
         builder.nonnegative();
