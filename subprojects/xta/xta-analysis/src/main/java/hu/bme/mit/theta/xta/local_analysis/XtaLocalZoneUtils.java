@@ -2,6 +2,7 @@ package hu.bme.mit.theta.xta.local_analysis;
 
 import com.google.common.collect.Lists;
 
+import com.google.common.collect.Streams;
 import hu.bme.mit.theta.core.clock.constr.ClockConstrs;
 import hu.bme.mit.theta.xta.local_analysis.localzone.LocalZonePrec;
 import hu.bme.mit.theta.xta.local_analysis.localzone.LocalZoneState;
@@ -400,10 +401,14 @@ public final class XtaLocalZoneUtils {
     }
 
     private static DBM global(LocalZoneState state, DBM syncedDBM) {
-        var processDbmPairs = state.getLocalDbms().entrySet().stream().map(entry -> new DBM.ProcessDbmPair(entry.getKey().getName(), entry.getValue())).toList();
+        var processDbmPairs = state.getLocalDbms().entrySet().stream().map(entry -> new DBM.ProcessDbmPair(entry.getKey().getName(), entry.getValue()));
 
-        var splitDBMs = syncedDBM.extractDbms(processDbmPairs);
+        var splitDBMs = syncedDBM.extractDbms(processDbmPairs.toList());
         var noRefClockDBMs = splitDBMs.stream().map(DBM::stripReferenceClock);
+
+        List<DBM.ProcessDbmPair> newPairs = Streams.zip(processDbmPairs, noRefClockDBMs, (pair, dbm) -> new DBM.ProcessDbmPair(pair.processName(), dbm)).toList();
+
+        return DBM.joinDbms(newPairs);
     }
 
 
