@@ -379,4 +379,32 @@ public final class XtaLocalZoneUtils {
         }
     }
 
+    public static DBM globalSync(LocalZoneState state) {
+        return global(state, sync(state));
+    }
+
+    private static DBM sync(LocalZoneState state) {
+        var processDbmPairs = state.getLocalDbms().entrySet().stream().map(entry -> new DBM.ProcessDbmPair(entry.getKey().getName(), entry.getValue())).toList();
+
+        var jointDBM = DBM.joinDbms(processDbmPairs);
+
+        for (int i = 0; i < processDbmPairs.size() - 1; i++) {
+            for (int j = i + 1; j < processDbmPairs.size(); j++) {
+                jointDBM.and(ClockConstrs.Eq(processDbmPairs.get(i).processDbm().getLastVarDecl(), processDbmPairs.get(j).processDbm().getLastVarDecl(), 0));
+            }
+        }
+
+        jointDBM.close();
+
+        return jointDBM;
+    }
+
+    private static DBM global(LocalZoneState state, DBM syncedDBM) {
+        var processDbmPairs = state.getLocalDbms().entrySet().stream().map(entry -> new DBM.ProcessDbmPair(entry.getKey().getName(), entry.getValue())).toList();
+
+        var splitDBMs = syncedDBM.extractDbms(processDbmPairs);
+        var noRefClockDBMs = splitDBMs.stream().map(DBM::stripReferenceClock);
+    }
+
+
 }
