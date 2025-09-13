@@ -32,6 +32,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import com.google.common.collect.Streams;
 import hu.bme.mit.theta.common.container.Containers;
 
 import java.util.Map;
@@ -43,21 +44,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
 
-import hu.bme.mit.theta.core.clock.constr.AndConstr;
-import hu.bme.mit.theta.core.clock.constr.ClockConstr;
-import hu.bme.mit.theta.core.clock.constr.ClockConstrVisitor;
-import hu.bme.mit.theta.core.clock.constr.DiffEqConstr;
-import hu.bme.mit.theta.core.clock.constr.DiffGeqConstr;
-import hu.bme.mit.theta.core.clock.constr.DiffGtConstr;
-import hu.bme.mit.theta.core.clock.constr.DiffLeqConstr;
-import hu.bme.mit.theta.core.clock.constr.DiffLtConstr;
-import hu.bme.mit.theta.core.clock.constr.FalseConstr;
-import hu.bme.mit.theta.core.clock.constr.TrueConstr;
-import hu.bme.mit.theta.core.clock.constr.UnitEqConstr;
-import hu.bme.mit.theta.core.clock.constr.UnitGeqConstr;
-import hu.bme.mit.theta.core.clock.constr.UnitGtConstr;
-import hu.bme.mit.theta.core.clock.constr.UnitLeqConstr;
-import hu.bme.mit.theta.core.clock.constr.UnitLtConstr;
+import hu.bme.mit.theta.core.clock.constr.*;
 import hu.bme.mit.theta.core.clock.op.ClockOp;
 import hu.bme.mit.theta.core.clock.op.ClockOpVisitor;
 import hu.bme.mit.theta.core.clock.op.CopyOp;
@@ -96,9 +83,7 @@ public final class DBM {
     // TODO replace BiFunction by IntBiFunction
     private DBM(final DbmSignature signature,
                 final BiFunction<? super VarDecl<RatType>, ? super VarDecl<RatType>, ? extends Integer> values) {
-        this(signature, (final int x, final int y) -> {
-            return values.apply(signature.getVar(x), signature.getVar(y));
-        });
+        this(signature, (final int x, final int y) -> values.apply(signature.getVar(x), signature.getVar(y)));
     }
 
     private DBM(final DBM dbm) {
@@ -157,11 +142,47 @@ public final class DBM {
         return joinedDbm;
     }
 
-    public static DBM stripReferenceClock(DBM dbm) {
-        List<VarDecl<RatType>> varDeclList = new ArrayList<>(dbm.signature.toList());
-        varDeclList.remove(varDeclList.size() - 1);
-        var signature = DbmSignature.over(varDeclList);
-        return new DBM(signature, (int x, int y) -> dbm.get(signature.getVar(x), signature.getVar(y)));
+    /**
+     * Joins all processes' DBMs, synchronises their reference clocks and closes the DBM
+     *
+     * @param processDbmPairs list of ProcessDbmPair objects for the whole network
+     * @return Joined, synchronized and closed DBM still containing reference clocks
+     */
+    public static DBM sync(List<ProcessDbmPair> processDbmPairs) {
+        var jointDBM = DBM.joinDbms(processDbmPairs);
+
+        for (int i = 0; i < processDbmPairs.size() - 1; i++) {
+            for (int j = i + 1; j < processDbmPairs.size(); j++) {
+                jointDBM.and(ClockConstrs.Eq(processDbmPairs.get(i).processDbm().getLastVarDecl(), processDbmPairs.get(j).processDbm().getLastVarDecl(), 0));
+            }
+        }
+
+        jointDBM.close();
+
+        return jointDBM;
+    }
+
+    /**
+     * Removes the reference clocks from the DBM based on the original dbms. Because theta uses standard zones,
+     * removing the reference clocks of a closed matrix creates a global zone.
+     *
+     * @param processDbmPairs list of ProcessDbmPair objects for the whole network
+     * @param syncedDBM       a DBM containing exactly the signature of every dbm in `processDbmPairs` joined without their
+     *                        zero clocks and a new zero clock created
+     * @return a global zone
+     */
+    public static DBM global(List<ProcessDbmPair> processDbmPairs, DBM syncedDBM) {
+
+        // gathering the variables necessary for the global dbm
+        List<VarDecl<RatType>> variables = processDbmPairs.stream().flatMap(pair -> {
+            var signatureCount = pair.processDbm.signature.size() - 2; // don't need the zero clock and the reference clock
+
+            return pair.processDbm.signature.toList().stream()
+                    .skip(1) // skip the zero clock
+                    .limit(signatureCount);
+        }).toList();
+
+        return new DBM(DbmSignature.over(variables), syncedDBM::get);
     }
 
     public List<DBM> extractDbms(List<ProcessDbmPair> originalDbms) {
@@ -661,7 +682,7 @@ public final class DBM {
         dbm.norm(k);
     }
 
-    public void close() {
+    private void close() {
         dbm.close();
     }
 

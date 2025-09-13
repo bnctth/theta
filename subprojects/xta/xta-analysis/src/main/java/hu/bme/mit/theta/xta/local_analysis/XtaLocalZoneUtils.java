@@ -2,7 +2,6 @@ package hu.bme.mit.theta.xta.local_analysis;
 
 import com.google.common.collect.Lists;
 
-import com.google.common.collect.Streams;
 import hu.bme.mit.theta.core.clock.constr.ClockConstrs;
 import hu.bme.mit.theta.xta.local_analysis.localzone.LocalZonePrec;
 import hu.bme.mit.theta.xta.local_analysis.localzone.LocalZoneState;
@@ -381,34 +380,9 @@ public final class XtaLocalZoneUtils {
     }
 
     public static DBM globalSync(LocalZoneState state) {
-        return global(state, sync(state));
-    }
-
-    private static DBM sync(LocalZoneState state) {
         var processDbmPairs = state.getLocalDbms().entrySet().stream().map(entry -> new DBM.ProcessDbmPair(entry.getKey().getName(), entry.getValue())).toList();
 
-        var jointDBM = DBM.joinDbms(processDbmPairs);
-
-        for (int i = 0; i < processDbmPairs.size() - 1; i++) {
-            for (int j = i + 1; j < processDbmPairs.size(); j++) {
-                jointDBM.and(ClockConstrs.Eq(processDbmPairs.get(i).processDbm().getLastVarDecl(), processDbmPairs.get(j).processDbm().getLastVarDecl(), 0));
-            }
-        }
-
-        jointDBM.close();
-
-        return jointDBM;
-    }
-
-    private static DBM global(LocalZoneState state, DBM syncedDBM) {
-        var processDbmPairs = state.getLocalDbms().entrySet().stream().map(entry -> new DBM.ProcessDbmPair(entry.getKey().getName(), entry.getValue()));
-
-        var splitDBMs = syncedDBM.extractDbms(processDbmPairs.toList());
-        var noRefClockDBMs = splitDBMs.stream().map(DBM::stripReferenceClock);
-
-        List<DBM.ProcessDbmPair> newPairs = Streams.zip(processDbmPairs, noRefClockDBMs, (pair, dbm) -> new DBM.ProcessDbmPair(pair.processName(), dbm)).toList();
-
-        return DBM.joinDbms(newPairs);
+        return DBM.global(processDbmPairs, DBM.sync(processDbmPairs));
     }
 
 
