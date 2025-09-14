@@ -10,17 +10,19 @@ public final class LocalZoneLattice implements Lattice<LocalZoneState> {
 
     private final PartialOrd<LocalZoneState> partialOrd;
 
-    private static final LocalZoneLattice INSTANCE = new LocalZoneLattice();
-
-    private LocalZoneLattice() { partialOrd = LocalZoneOrd.getInstance(); }
-
-    public static LocalZoneLattice getInstance() { return INSTANCE; }
+    LocalZoneLattice(PartialOrd<LocalZoneState> partialOrd) {
+        this.partialOrd = partialOrd;
+    }
 
     @Override
-    public LocalZoneState top() { return LocalZoneStateTop.getInstance(); }
+    public LocalZoneState top() {
+        return LocalZoneStateTop.getInstance();
+    }
 
     @Override
-    public LocalZoneState bottom() { return LocalZoneStateBottom.getInstance(); }
+    public LocalZoneState bottom() {
+        return LocalZoneStateBottom.getInstance();
+    }
 
     @Override
     public LocalZoneState meet(final LocalZoneState lhs, final LocalZoneState rhs) {

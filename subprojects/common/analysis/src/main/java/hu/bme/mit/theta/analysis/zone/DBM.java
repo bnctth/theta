@@ -182,7 +182,7 @@ public final class DBM {
                     .limit(signatureCount);
         }).toList();
 
-        return new DBM(DbmSignature.over(variables), syncedDBM::get);
+        return DBM.project(syncedDBM, variables);
     }
 
     public List<DBM> extractDbms(List<ProcessDbmPair> originalDbms) {
