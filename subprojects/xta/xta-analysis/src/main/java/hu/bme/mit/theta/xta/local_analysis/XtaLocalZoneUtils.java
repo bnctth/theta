@@ -148,7 +148,7 @@ public final class XtaLocalZoneUtils {
         List<DBM.ProcessDbmPair> targetProcDbmMap = new ArrayList<>();
         for (var loc : targetLocs)
             targetProcDbmMap.add(new DBM.ProcessDbmPair(
-                    loc.getProc().getName(), zone.getDbmForProcess(loc.getProc()).get()
+                    loc.getProc().getName(), zone.getDbmForProcess(loc.getProc()).orElseThrow()
             ));
 
         return targetProcDbmMap;
@@ -212,6 +212,23 @@ public final class XtaLocalZoneUtils {
         builder.up();
     }
 
+    private static void applySyncInverseUpdates(final ZoneState.Builder builder, final Edge edge) {
+        for (final Update update : Lists.reverse(edge.getUpdates())) {
+            if (update.isClockUpdate()) {
+                final ResetOp op = (ResetOp) update.asClockUpdate().getClockOp();
+                final VarDecl<RatType> varDecl = op.getVar();
+                final int value = op.getValue();
+                builder.and(Eq(varDecl, value));
+                builder.free(varDecl);
+            }
+        }
+    }
+
+    private static void applySyncInverseDelay(final ZoneState.Builder builder) {
+        builder.nonnegative();
+        builder.down();
+    }
+
 
     /// /
     //
@@ -255,28 +272,30 @@ public final class XtaLocalZoneUtils {
 
     private static LocalZoneState preForBinaryAction(final LocalZoneState state, final BinaryXtaAction action,
                                                      final LocalZonePrec prec) {
-        final LocalZoneState.Builder preStateBuilder = state.project(prec.getMapping());
-
         final List<Loc> sourceLocs = action.getSourceLocs();
-        final Edge emitEdge = action.getEmitEdge();
-        final Edge recvEdge = action.getRecvEdge();
+        final Edge emittingEdge = action.getEmitEdge();
+        final Edge receivingEdge = action.getRecvEdge();
         final List<Loc> targetLocs = action.getTargetLocs();
+
+        List<DBM.ProcessDbmPair> actionDbmList = fixOrderedDbmList(targetLocs, state);
+        DBM jointDBM = DBM.joinDbms(actionDbmList);
+        applyVirtualGuards(targetLocs, jointDBM, state);
+
+        final ZoneState.Builder preStateBuilder = ZoneState.Builder.project(jointDBM);
 
         List<Loc> involvedLocs = action.getTargetLocs();
         if (shouldApplyDelay(involvedLocs)) {
-            applyInverseDelay(preStateBuilder, involvedLocs);
+            applySyncInverseDelay(preStateBuilder);
         }
-        https:
-//grapheneos.org/install/web#replacing-grapheneos-with-the-stock-os
-        applyInvariants(preStateBuilder, targetLocs);
-        applyInverseUpdates(preStateBuilder, recvEdge);
-        applyInverseUpdates(preStateBuilder, emitEdge);
-        applyGuards(preStateBuilder, recvEdge);
-        applyGuards(preStateBuilder, emitEdge);
-        applyInvariants(preStateBuilder, sourceLocs);
+        applySyncInvariants(preStateBuilder, targetLocs);
+        applySyncInverseUpdates(preStateBuilder, receivingEdge);
+        applySyncInverseUpdates(preStateBuilder, emittingEdge);
+        applySyncGuards(preStateBuilder, receivingEdge);
+        applySyncGuards(preStateBuilder, emittingEdge);
+        applySyncInvariants(preStateBuilder, sourceLocs);
 
-        final LocalZoneState succState = preStateBuilder.build();
-        return succState;
+        constructNewZone(targetLocs, preStateBuilder.getDbm().extractDbms(actionDbmList), state);
+        return state;
     }
 
     private static LocalZoneState preForBroadcastAction(final LocalZoneState state,
