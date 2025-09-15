@@ -279,7 +279,6 @@ public final class XtaLocalZoneUtils {
 
         List<DBM.ProcessDbmPair> actionDbmList = fixOrderedDbmList(sourceLocs, state);
         DBM jointDBM = DBM.joinDbms(actionDbmList);
-        applyVirtualGuards(targetLocs, jointDBM, state);
 
         final ZoneState.Builder preStateBuilder = ZoneState.Builder.project(jointDBM);
 
@@ -293,6 +292,8 @@ public final class XtaLocalZoneUtils {
         applySyncGuards(preStateBuilder, receivingEdge);
         applySyncGuards(preStateBuilder, emittingEdge);
         applySyncInvariants(preStateBuilder, sourceLocs);
+
+        applyVirtualGuards(targetLocs, jointDBM, state);
 
         constructNewZone(targetLocs, preStateBuilder.getDbm().extractDbms(actionDbmList), state);
         return state;
@@ -310,7 +311,6 @@ public final class XtaLocalZoneUtils {
 
         List<DBM.ProcessDbmPair> actionDbmList = fixOrderedDbmList(sourceLocs, state);
         DBM jointDBM = DBM.joinDbms(actionDbmList);
-        applyVirtualGuards(targetLocs, jointDBM, state);
 
         final ZoneState.Builder preStateBuilder = ZoneState.Builder.project(jointDBM);
         if (shouldApplyDelay(involvedLocs)) {
@@ -334,6 +334,8 @@ public final class XtaLocalZoneUtils {
 
         applySyncGuards(preStateBuilder, emitEdge);
         applySyncInvariants(preStateBuilder, sourceLocs);
+
+        applyVirtualGuards(targetLocs, jointDBM, state);
 
         constructNewZone(targetLocs, jointDBM.extractDbms(actionDbmList), state);
         return state;
