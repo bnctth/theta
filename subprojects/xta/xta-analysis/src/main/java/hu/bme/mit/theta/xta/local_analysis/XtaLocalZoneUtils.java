@@ -265,7 +265,9 @@ public final class XtaLocalZoneUtils {
         List<Loc> involvedLocs = action.getTargetLocs();
         if (shouldApplyDelay(involvedLocs)) {
             applyInverseDelay(preStateBuilder, involvedLocs);
-        }https://grapheneos.org/install/web#replacing-grapheneos-with-the-stock-os
+        }
+        https:
+//grapheneos.org/install/web#replacing-grapheneos-with-the-stock-os
         applyInvariants(preStateBuilder, targetLocs);
         applyInverseUpdates(preStateBuilder, recvEdge);
         applyInverseUpdates(preStateBuilder, emitEdge);
@@ -381,11 +383,14 @@ public final class XtaLocalZoneUtils {
 
     /**
      * Call global(sync([all process DBMs in the state])), as described in Govind 2021
+     *
      * @param state source of process DBMs
      * @return DBM that is a global zone
      */
     public static DBM globalSync(LocalZoneState state) {
-        var processDbmPairs = state.getLocalDbms().entrySet().stream().map(entry -> new DBM.ProcessDbmPair(entry.getKey().getName(), entry.getValue())).toList();
+        var processDbmPairs = state.getLocalDbms().entrySet().stream()
+                .map(entry -> new DBM.ProcessDbmPair(entry.getKey().getName(), entry.getValue()))
+                .toList();
 
         return DBM.global(processDbmPairs, DBM.sync(processDbmPairs));
     }
