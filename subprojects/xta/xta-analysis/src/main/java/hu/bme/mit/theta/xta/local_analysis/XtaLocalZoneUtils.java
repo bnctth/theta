@@ -277,7 +277,7 @@ public final class XtaLocalZoneUtils {
         final Edge receivingEdge = action.getRecvEdge();
         final List<Loc> targetLocs = action.getTargetLocs();
 
-        List<DBM.ProcessDbmPair> actionDbmList = fixOrderedDbmList(targetLocs, state);
+        List<DBM.ProcessDbmPair> actionDbmList = fixOrderedDbmList(sourceLocs, state);
         DBM jointDBM = DBM.joinDbms(actionDbmList);
         applyVirtualGuards(targetLocs, jointDBM, state);
 
@@ -301,22 +301,25 @@ public final class XtaLocalZoneUtils {
     private static LocalZoneState preForBroadcastAction(final LocalZoneState state,
                                                         final BroadcastXtaAction action,
                                                         final LocalZonePrec prec) {
-        final LocalZoneState.Builder preStateBuilder = state.project(prec.getMapping());
-
         final List<Loc> sourceLocs = action.getSourceLocs();
         final Edge emitEdge = action.getEmitEdge();
         final List<Edge> reverseRecvEdges = Lists.reverse(action.getRecvEdges());
         final List<Collection<Edge>> nonRecvEdgeCols = action.getNonRecvEdges();
         final List<Loc> targetLocs = action.getTargetLocs();
-
         List<Loc> involvedLocs = action.getTargetLocs();
+
+        List<DBM.ProcessDbmPair> actionDbmList = fixOrderedDbmList(sourceLocs, state);
+        DBM jointDBM = DBM.joinDbms(actionDbmList);
+        applyVirtualGuards(targetLocs, jointDBM, state);
+
+        final ZoneState.Builder preStateBuilder = ZoneState.Builder.project(jointDBM);
         if (shouldApplyDelay(involvedLocs)) {
-            applyInverseDelay(preStateBuilder, involvedLocs);
+            applySyncInverseDelay(preStateBuilder);
         }
-        applyInvariants(preStateBuilder, targetLocs);
+        applySyncInvariants(preStateBuilder, targetLocs);
         reverseRecvEdges.stream()
-                .forEachOrdered(recvEdge -> applyInverseUpdates(preStateBuilder, recvEdge));
-        applyInverseUpdates(preStateBuilder, emitEdge);
+                .forEachOrdered(recvEdge -> applySyncInverseUpdates(preStateBuilder, recvEdge));
+        applySyncInverseUpdates(preStateBuilder, emitEdge);
 
         if (nonRecvEdgeCols.stream()
                 .anyMatch(c -> c.stream().anyMatch(XtaLocalZoneUtils::hasClockGuards))) {
@@ -329,11 +332,11 @@ public final class XtaLocalZoneUtils {
                     "Clock guards on edges with broadcast synchronization labels are not supported.");
         }
 
-        applyGuards(preStateBuilder, emitEdge);
-        applyInvariants(preStateBuilder, sourceLocs);
+        applySyncGuards(preStateBuilder, emitEdge);
+        applySyncInvariants(preStateBuilder, sourceLocs);
 
-        final LocalZoneState succState = preStateBuilder.build();
-        return succState;
+        constructNewZone(targetLocs, jointDBM.extractDbms(actionDbmList), state);
+        return state;
     }
 
     /// /
