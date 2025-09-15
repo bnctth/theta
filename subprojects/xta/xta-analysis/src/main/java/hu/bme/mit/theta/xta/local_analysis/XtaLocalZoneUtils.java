@@ -93,7 +93,9 @@ public final class XtaLocalZoneUtils {
         applySyncUpdates(succStateBuilder, receivingEdge);
         applySyncInvariants(succStateBuilder, targetLocs);
 
-        applySyncDelay(succStateBuilder);
+        if (shouldApplyDelay(action.getTargetLocs())) {
+            applySyncDelay(succStateBuilder);
+        }
 
         constructNewZone(targetLocs, succStateBuilder.getDbm().extractDbms(actionDbmList), state);
 
@@ -131,9 +133,9 @@ public final class XtaLocalZoneUtils {
         applySyncUpdates(succStateBuilder, emitEdge);
         recvEdges.stream().forEachOrdered(recvEdge -> applySyncUpdates(succStateBuilder, recvEdge));
         applySyncInvariants(succStateBuilder, targetLocs);
-
-        applySyncDelay(succStateBuilder);
-
+        if (shouldApplyDelay(action.getTargetLocs())) {
+            applySyncDelay(succStateBuilder);
+        }
         constructNewZone(targetLocs, jointDBM.extractDbms(actionDbmList), state);
 
         return state;
