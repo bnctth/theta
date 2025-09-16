@@ -28,7 +28,7 @@ import hu.bme.mit.theta.solver.SolverFactory;
 import hu.bme.mit.theta.solver.z3.Z3SolverFactory;
 import hu.bme.mit.theta.xta.XtaSystem;
 import hu.bme.mit.theta.xta.analysis.*;
-import hu.bme.mit.theta.xta.analysis.lazy.ClockStrategy;
+import hu.bme.mit.theta.xta.analysis.lazy.ClockStrategy2;
 import hu.bme.mit.theta.xta.analysis.lazy.LazyXtaLensUtils;
 import hu.bme.mit.theta.xta.analysis.lazy.LuZoneStrategy2;
 import hu.bme.mit.theta.xta.analysis.zone.XtaZoneAnalysis;
@@ -78,7 +78,7 @@ public class CombinedLazyCegarXtaCheckerConfigFactory {
     private int maxEnum = 0;
     private PredSplit predSplit = PredSplit.WHOLE;
     private DataRefinement dataRefinement = DataRefinement.SEQ_ITP;
-    private ClockStrategy clockStrategy = ClockStrategy.BWITP;
+    private ClockStrategy2.ClockStrategy clockStrategy = ClockStrategy2.ClockStrategy.BWITP;
     private SearchStrategy searchStrategy = SearchStrategy.BFS;
     private PruneStrategy pruneStrategy = PruneStrategy.FULL;
 
@@ -120,7 +120,7 @@ public class CombinedLazyCegarXtaCheckerConfigFactory {
         return this;
     }
 
-    public CombinedLazyCegarXtaCheckerConfigFactory clockStrategy(final ClockStrategy clockStrategy) {
+    public CombinedLazyCegarXtaCheckerConfigFactory clockStrategy(final ClockStrategy2.ClockStrategy clockStrategy) {
         this.clockStrategy = clockStrategy;
         return this;
     }

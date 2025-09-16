@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
+import hu.bme.mit.theta.xta.local_analysis.LocalZoneOrd;
 import hu.bme.mit.theta.xta.local_analysis.XtaLocalAnalysis;
 import hu.bme.mit.theta.xta.local_analysis.localzone.LocalZonePrec;
 import hu.bme.mit.theta.xta.local_analysis.localzone.LocalZoneState;
@@ -66,7 +67,7 @@ public final class XtaLocalZoneAbsTest {
 
         final LTS<XtaState<?>, XtaAction> lts = XtaLts.create(system);
         final Analysis<ExplState, XtaAction, UnitPrec> explAnalysis = XtaExplAnalysis.create(system);
-        final Analysis<LocalZoneState, XtaAction, LocalZonePrec> zoneAnalysis = XtaLocalAnalysis.getInstance();
+        final Analysis<LocalZoneState, XtaAction, LocalZonePrec> zoneAnalysis = new XtaLocalAnalysis(LocalZoneOrd.getInstance());
         final Analysis<Prod2State<ExplState, LocalZoneState>, XtaAction, Prod2Prec<UnitPrec, LocalZonePrec>> prodAnalysis = Prod2Analysis
                 .create(explAnalysis, zoneAnalysis);
         final Analysis<Prod2State<ExplState, LocalZoneState>, XtaAction, LocalZonePrec> mappedAnalysis = PrecMappingAnalysis

@@ -23,7 +23,7 @@ import hu.bme.mit.theta.analysis.algorithm.SafetyResult;
 import hu.bme.mit.theta.analysis.unit.UnitPrec;
 import hu.bme.mit.theta.solver.z3.Z3SolverFactory;
 import hu.bme.mit.theta.xta.XtaSystem;
-import hu.bme.mit.theta.xta.analysis.lazy.ClockStrategy;
+import hu.bme.mit.theta.xta.analysis.lazy.ClockStrategy2;
 import hu.bme.mit.theta.xta.analysis.lazy.DataStrategy;
 import hu.bme.mit.theta.xta.analysis.lazy.LazyXtaCheckerFactory;
 import hu.bme.mit.theta.xta.dsl.XtaDslManager;
@@ -40,7 +40,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import static hu.bme.mit.theta.analysis.algorithm.SearchStrategy.BFS;
-import static hu.bme.mit.theta.xta.analysis.lazy.ClockStrategy.LU;
+import static hu.bme.mit.theta.xta.analysis.lazy.ClockStrategy2.ClockStrategy.LU;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(Parameterized.class)
@@ -65,7 +65,7 @@ public final class LazyXtaCheckerTest {
 	public DataStrategy dataStrategy;
 
 	@Parameter(2)
-	public ClockStrategy clockStrategy;
+	public ClockStrategy2.ClockStrategy clockStrategy;
 
 	private SafetyChecker<? extends XtaState<?>, XtaAction, UnitPrec> checker;
 
@@ -74,7 +74,7 @@ public final class LazyXtaCheckerTest {
 		final Collection<Object[]> result = new ArrayList<>();
 		for (final String model : MODELS) {
 			for (final DataStrategy dataStrategy : DataStrategy.values()) {
-				for (final ClockStrategy clockStrategy : ClockStrategy.values()) {
+				for (final ClockStrategy2.ClockStrategy clockStrategy : ClockStrategy2.ClockStrategy.values()) {
 					if (!MODELS_WITH_UNKNOWN_SOLVER_STATUS.contains(model) || (clockStrategy != LU)) {
 						result.add(new Object[]{model, dataStrategy, clockStrategy});
 					}

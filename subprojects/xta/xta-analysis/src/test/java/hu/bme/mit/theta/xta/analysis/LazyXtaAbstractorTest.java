@@ -2,19 +2,11 @@ package hu.bme.mit.theta.xta.analysis;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import hu.bme.mit.theta.analysis.Prec;
-import hu.bme.mit.theta.analysis.State;
-import hu.bme.mit.theta.analysis.algorithm.ARG;
 import hu.bme.mit.theta.analysis.algorithm.ArgChecker;
-import hu.bme.mit.theta.analysis.algorithm.cegar.Abstractor;
-import hu.bme.mit.theta.analysis.algorithm.lazy.LazyState;
 import hu.bme.mit.theta.analysis.expr.ExprMeetStrategy;
-import hu.bme.mit.theta.analysis.prod2.Prod2Prec;
-import hu.bme.mit.theta.analysis.prod2.Prod2State;
-import hu.bme.mit.theta.analysis.unit.UnitPrec;
 import hu.bme.mit.theta.solver.z3.Z3SolverFactory;
 import hu.bme.mit.theta.xta.XtaSystem;
-import hu.bme.mit.theta.xta.analysis.lazy.ClockStrategy;
+import hu.bme.mit.theta.xta.analysis.lazy.ClockStrategy2;
 import hu.bme.mit.theta.xta.analysis.lazy.DataStrategy2;
 import hu.bme.mit.theta.xta.analysis.lazy.LazyXtaAbstractorConfig;
 import hu.bme.mit.theta.xta.analysis.lazy.LazyXtaAbstractorConfigFactory;
@@ -32,12 +24,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import static hu.bme.mit.theta.analysis.algorithm.SearchStrategy.BFS;
-import static hu.bme.mit.theta.xta.analysis.lazy.ClockStrategy.LU;
+import static hu.bme.mit.theta.xta.analysis.lazy.ClockStrategy2.ClockStrategy.LU;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(Parameterized.class)
 public final class LazyXtaAbstractorTest {
-    private static final String MODEL_CSMA = "/csma-2.xta";
+    private static final String MODEL_CSMA = "/model/csma-2.xta";
     private static final String MODEL_FDDI = "/fddi-2.xta";
     private static final String MODEL_FISCHER = "/fischer-2-32-64.xta";
     private static final String MODEL_LYNCH = "/lynch-2-16.xta";
@@ -57,7 +49,7 @@ public final class LazyXtaAbstractorTest {
     public DataStrategy2 dataStrategy;
 
     @Parameter(2)
-    public ClockStrategy clockStrategy;
+    public ClockStrategy2 clockStrategy;
 
     private LazyXtaAbstractorConfig<?, ?, ?> abstractor;
 
@@ -67,8 +59,8 @@ public final class LazyXtaAbstractorTest {
         for (final String model : MODELS) {
 
             for (final DataStrategy2 dataStrategy : DataStrategy2.getValidStrategies()) {
-                for (final ClockStrategy clockStrategy : ClockStrategy.values()) {
-                    if (!MODELS_WITH_UNKNOWN_SOLVER_STATUS.contains(model) || (clockStrategy != LU)) {
+                for (final ClockStrategy2 clockStrategy : ClockStrategy2.getValidStrategies()) {
+                    if (!MODELS_WITH_UNKNOWN_SOLVER_STATUS.contains(model) || (clockStrategy.getClockStrategy() != LU)) {
                         result.add(new Object[]{model, dataStrategy, clockStrategy});
                     }
                 }

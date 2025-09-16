@@ -10,18 +10,15 @@ import hu.bme.mit.theta.xta.local_analysis.localzone.LocalZoneState;
 
 public final class XtaLocalAnalysis implements Analysis<LocalZoneState, XtaAction, LocalZonePrec> {
 
-    private static final XtaLocalAnalysis INSTANCE = new XtaLocalAnalysis();
+    PartialOrd<LocalZoneState> partialOrd;
 
-    private XtaLocalAnalysis() {
-    }
-
-    public static XtaLocalAnalysis getInstance() {
-        return INSTANCE;
+    public XtaLocalAnalysis(PartialOrd<LocalZoneState> partialOrd) {
+        this.partialOrd = partialOrd;
     }
 
     @Override
     public PartialOrd<LocalZoneState> getPartialOrd() {
-        return LocalZoneOrd.getInstance();
+        return  partialOrd;
     }
 
     @Override

@@ -34,6 +34,8 @@ import hu.bme.mit.theta.xta.analysis.zone.XtaZoneAnalysis;
 import hu.bme.mit.theta.xta.analysis.zone.XtaZoneInvTransFunc;
 import hu.bme.mit.theta.xta.analysis.zone.XtaZoneTransFunc;
 import hu.bme.mit.theta.xta.analysis.zone.lu.LuZoneState;
+import hu.bme.mit.theta.xta.local_analysis.*;
+import hu.bme.mit.theta.xta.local_analysis.localzone.LocalZonePrec;
 
 import java.util.function.Function;
 
@@ -45,7 +47,7 @@ public final class LazyXtaAbstractorConfigFactory {
 
     public static <DConcr extends State, CConcr extends State, DAbstr extends State, CAbstr extends State, DPrec extends Prec, CPrec extends Prec>
     LazyXtaAbstractorConfig<Prod2State<DConcr, CConcr>, Prod2State<DAbstr, CAbstr>, Prod2Prec<DPrec, CPrec>>
-    create(final XtaSystem system, final DataStrategy2 dataStrategy, final ClockStrategy clockStrategy, final SearchStrategy searchStrategy, final ExprMeetStrategy meetStrategy) {
+    create(final XtaSystem system, final DataStrategy2 dataStrategy, final ClockStrategy2 clockStrategy, final SearchStrategy searchStrategy, final ExprMeetStrategy meetStrategy) {
 
         final Factory<DConcr, CConcr, DAbstr, CAbstr, DPrec, CPrec>
                 factory = new Factory<>(system, dataStrategy, clockStrategy, searchStrategy, meetStrategy);
@@ -54,7 +56,7 @@ public final class LazyXtaAbstractorConfigFactory {
 
     public static <DConcr extends State, CConcr extends State, DAbstr extends State, CAbstr extends State, DPrec extends Prec, CPrec extends Prec>
     LazyXtaAbstractorConfig<Prod2State<DConcr, CConcr>, Prod2State<DAbstr, CAbstr>, Prod2Prec<DPrec, CPrec>>
-    create(final XtaSystem system, final DataStrategy2 dataStrategy, final ClockStrategy clockStrategy, final SearchStrategy searchStrategy) {
+    create(final XtaSystem system, final DataStrategy2 dataStrategy, final ClockStrategy2 clockStrategy, final SearchStrategy searchStrategy) {
         return create(system, dataStrategy, clockStrategy, searchStrategy, ExprMeetStrategy.BASIC);
     }
 
@@ -62,13 +64,13 @@ public final class LazyXtaAbstractorConfigFactory {
 
         private final XtaSystem system;
         private final DataStrategy2 dataStrategy;
-        private final ClockStrategy clockStrategy;
+        private final ClockStrategy2 clockStrategy;
         private final SearchStrategy searchStrategy;
         private final ExprMeetStrategy meetStrategy;
         private final SolverFactory solverFactory;
 
-        public Factory(final XtaSystem system, final DataStrategy2 dataStrategy, final ClockStrategy clockStrategy,
-                       final SearchStrategy searchStrategy, final ExprMeetStrategy meetStrategy){
+        public Factory(final XtaSystem system, final DataStrategy2 dataStrategy, final ClockStrategy2 clockStrategy,
+                       final SearchStrategy searchStrategy, final ExprMeetStrategy meetStrategy) {
             this.system = system;
             this.dataStrategy = dataStrategy;
             this.clockStrategy = clockStrategy;
@@ -118,14 +120,13 @@ public final class LazyXtaAbstractorConfigFactory {
         }
 
         private Prec createConcrZonePrec() {
-            switch (clockStrategy) {
-                case BWITP:
-                case FWITP:
-                case LU:
-                    return ZonePrec.of(system.getClockVars());
-                default:
-                    throw new AssertionError();
-            }
+            return switch (clockStrategy.getClockStrategy()) {
+                case BWITP, FWITP, LU -> switch (clockStrategy.getZoneRepresentation()) {
+                    case Global -> ZonePrec.of(system.getClockVars());
+                    case Local, LocalSyncSub -> LocalZonePrec.of(system.getProcessClockMap());
+                };
+                default -> throw new AssertionError();
+            };
         }
 
         private LazyAnalysis<XtaState<Prod2State<DConcr, CConcr>>, XtaState<Prod2State<DAbstr, CAbstr>>, XtaAction, Prod2Prec<DPrec, CPrec>>
@@ -171,18 +172,18 @@ public final class LazyXtaAbstractorConfigFactory {
         }
 
         private Analysis createConcrClockAnalysis() {
-            switch (clockStrategy) {
-                case FWITP:
-                case BWITP:
-                case LU:
-                    return XtaZoneAnalysis.create(system.getInitLocs());
-                default:
-                    throw new AssertionError();
-            }
+            return switch (clockStrategy.getClockStrategy()) {
+                case FWITP, BWITP, LU -> switch (clockStrategy.getZoneRepresentation()) {
+                    case Global -> XtaZoneAnalysis.create(system.getInitLocs());;
+                    case Local -> new XtaLocalAnalysis(LocalZoneOrd.getInstance());
+                    case LocalSyncSub -> new XtaLocalAnalysis(LocalZoneSyncSubsumptionOrd.getInstance());
+                };
+                default -> throw new AssertionError();
+            };
         }
 
         private LazyStrategy<Prod2State<DConcr, CConcr>, Prod2State<DAbstr, CAbstr>, LazyState<XtaState<Prod2State<DConcr, CConcr>>, XtaState<Prod2State<DAbstr, CAbstr>>>, XtaAction>
-        createLazyStrategy(final XtaSystem system, final DataStrategy2 dataStrategy, final ClockStrategy clockStrategy) {
+        createLazyStrategy(final XtaSystem system, final DataStrategy2 dataStrategy, final ClockStrategy2 clockStrategy) {
             final LazyStrategy<DConcr, DAbstr, LazyState<XtaState<Prod2State<DConcr, CConcr>>, XtaState<Prod2State<DAbstr, CAbstr>>>, XtaAction>
                     dataLazyStrategy = createDataStrategy2(system, dataStrategy);
             final LazyStrategy<CConcr, CAbstr, LazyState<XtaState<Prod2State<DConcr, CConcr>>, XtaState<Prod2State<DAbstr, CAbstr>>>, XtaAction>
@@ -305,8 +306,8 @@ public final class LazyXtaAbstractorConfigFactory {
             }
         }
 
-        private LazyStrategy createClockStrategy(final XtaSystem system, final ClockStrategy clockStrategy) {
-            switch (clockStrategy) {
+        private LazyStrategy createClockStrategy(final XtaSystem system, final ClockStrategy2 clockStrategy) {
+            switch (clockStrategy.getClockStrategy()) {
                 case BWITP:
                 case FWITP:
                     return createLazyZoneStrategy(system, clockStrategy);
@@ -319,19 +320,36 @@ public final class LazyXtaAbstractorConfigFactory {
             }
         }
 
-        private LazyStrategy<ZoneState, ZoneState, LazyState<XtaState<Prod2State<?, ZoneState>>, XtaState<Prod2State<?, ZoneState>>>, XtaAction>
-        createLazyZoneStrategy(final XtaSystem system, final ClockStrategy clockStrategy) {
+        private LazyStrategy<? extends State, ? extends State, LazyState<XtaState<Prod2State<?, ? extends State>>, XtaState<Prod2State<?, ? extends State>>>, XtaAction>
+        createLazyZoneStrategy(final XtaSystem system, final ClockStrategy2 clockStrategy) {
 
-            final Lens<LazyState<XtaState<Prod2State<?, ZoneState>>, XtaState<Prod2State<?, ZoneState>>>, LazyState<ZoneState, ZoneState>>
+            final Lens<LazyState<XtaState<Prod2State<?, State>>, XtaState<Prod2State<?, ExprState>>>, LazyState<State, ExprState>>
                     lens = LazyXtaLensUtils.createLazyClockLens();
-            final Lattice<ZoneState> lattice = ZoneLattice.getInstance();
-            final Interpolator<ZoneState, ZoneState> interpolator = ZoneInterpolator.getInstance();
-            final PartialOrd<ZoneState> partialOrd = ZoneOrd.getInstance();
-            final Concretizer<ZoneState, ZoneState> concretizer = BasicConcretizer.create(partialOrd);
-            final InvTransFunc<ZoneState, XtaAction, ZonePrec> zoneInvTransFunc = XtaZoneInvTransFunc.getInstance();
-            final ZonePrec prec = ZonePrec.of(system.getClockVars());
+            final Lattice<? extends State> lattice = switch (clockStrategy.getZoneRepresentation()) {
+                case Global -> ZoneLattice.getInstance();
+                case Local -> new LocalZoneLattice(LocalZoneOrd.getInstance());
+                case LocalSyncSub -> new LocalZoneLattice(LocalZoneSyncSubsumptionOrd.getInstance());
+            };
+            final Interpolator<? extends State, ? extends ExprState> interpolator = switch (clockStrategy.getZoneRepresentation()) {
+                case Global -> ZoneInterpolator.getInstance();
+                case Local, LocalSyncSub -> LocalZoneInterpolator.getInstance();
+            };
+            final PartialOrd<? extends State> partialOrd = switch (clockStrategy.getZoneRepresentation()) {
+                case Global -> ZoneOrd.getInstance();
+                case Local -> LocalZoneOrd.getInstance();
+                case LocalSyncSub -> LocalZoneSyncSubsumptionOrd.getInstance();
+            };
+            final Concretizer<? extends State, ? extends State> concretizer = BasicConcretizer.create(partialOrd);
+            final InvTransFunc<? extends ExprState, XtaAction, ? extends Prec> zoneInvTransFunc = switch (clockStrategy.getZoneRepresentation()) {
+                case Global -> XtaZoneInvTransFunc.getInstance();
+                case Local, LocalSyncSub -> XtaLocalZoneInvTransFunc.getInstance();
+            };
+            final Prec prec = switch (clockStrategy.getZoneRepresentation()) {
+                case Global -> ZonePrec.of(system.getClockVars());
+                case Local, LocalSyncSub -> LocalZonePrec.of(system.getProcessClockMap());
+            };
 
-            switch (clockStrategy){
+            switch (clockStrategy.getClockStrategy()) {
                 case BWITP:
                     return new BwItpStrategy<>(lens, lattice, interpolator, concretizer, zoneInvTransFunc, prec);
                 case FWITP:

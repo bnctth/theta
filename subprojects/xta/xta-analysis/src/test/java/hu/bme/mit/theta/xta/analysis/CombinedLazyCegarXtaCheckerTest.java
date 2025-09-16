@@ -21,7 +21,7 @@ import hu.bme.mit.theta.solver.z3.Z3SolverFactory;
 import hu.bme.mit.theta.xta.XtaSystem;
 import hu.bme.mit.theta.xta.analysis.combinedlazycegar.CombinedLazyCegarXtaCheckerConfig;
 import hu.bme.mit.theta.xta.analysis.combinedlazycegar.CombinedLazyCegarXtaCheckerConfigFactory;
-import hu.bme.mit.theta.xta.analysis.lazy.ClockStrategy;
+import hu.bme.mit.theta.xta.analysis.lazy.ClockStrategy2;
 import hu.bme.mit.theta.xta.analysis.lazy.DataStrategy;
 import hu.bme.mit.theta.xta.dsl.XtaDslManager;
 import org.junit.Before;
@@ -35,7 +35,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -53,7 +52,7 @@ public final class CombinedLazyCegarXtaCheckerTest {
 	public DataStrategy dataStrategy;
 
 	@Parameter(3)
-	public ClockStrategy clockStrategy;
+	public ClockStrategy2 clockStrategy;
 
 	@Parameter(4)
 	public Boolean safety;

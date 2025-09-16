@@ -10,7 +10,7 @@ public final class LocalZoneLattice implements Lattice<LocalZoneState> {
 
     private final PartialOrd<LocalZoneState> partialOrd;
 
-    LocalZoneLattice(PartialOrd<LocalZoneState> partialOrd) {
+    public LocalZoneLattice(PartialOrd<LocalZoneState> partialOrd) {
         this.partialOrd = partialOrd;
     }
 
