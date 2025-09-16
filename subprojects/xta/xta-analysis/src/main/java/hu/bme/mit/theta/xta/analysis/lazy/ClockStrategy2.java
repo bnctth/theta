@@ -18,8 +18,6 @@ package hu.bme.mit.theta.xta.analysis.lazy;
 import java.util.Collection;
 import java.util.List;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 
 public final class ClockStrategy2 {
 
@@ -33,7 +31,16 @@ public final class ClockStrategy2 {
 
 
     private static final Collection<ClockStrategy2> VALID_DATA_STRATEGIES = List.of(
+            // Global goes with all clock strategies
+            new ClockStrategy2(ClockStrategy.LU),
+            new ClockStrategy2(ClockStrategy.FWITP),
+            new ClockStrategy2(ClockStrategy.BWITP),
 
+            // Local and LocalSyncSub only go with FWITP and BWITP for now
+            new ClockStrategy2(ClockStrategy.FWITP, ZoneRepresentation.Local),
+            new ClockStrategy2(ClockStrategy.FWITP, ZoneRepresentation.LocalSyncSub),
+            new ClockStrategy2(ClockStrategy.BWITP, ZoneRepresentation.Local),
+            new ClockStrategy2(ClockStrategy.BWITP, ZoneRepresentation.LocalSyncSub)
     );
 
     private final ClockStrategy clockStrategy;
