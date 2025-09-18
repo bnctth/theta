@@ -91,6 +91,10 @@ public final class DBM {
         this.dbm = new BasicDbm(dbm.dbm);
     }
 
+    public static DBM topOf(DBM dbm) {
+        return new DBM(dbm.signature, TOP_DBM_VALUES);
+    }
+
     /// /
     // This is horrible, hurts encapsulation, and should be replaced
     // However I have one day until the deadline, so I will leave it as is

@@ -23,7 +23,7 @@ public final class LocalZoneInterpolator implements Interpolator<LocalZoneState,
 
     @Override
     public Collection<LocalZoneState> complement(final LocalZoneState zone) {
-        throw new UnsupportedOperationException("This ain't supported, bro");
+        return zone.complement();
     }
 
     @Override

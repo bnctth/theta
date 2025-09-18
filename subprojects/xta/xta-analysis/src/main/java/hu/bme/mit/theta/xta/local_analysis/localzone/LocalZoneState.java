@@ -19,6 +19,7 @@ package hu.bme.mit.theta.xta.local_analysis.localzone;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 
 import hu.bme.mit.theta.analysis.expr.ExprState;
@@ -111,6 +112,20 @@ public class LocalZoneState implements ExprState {
         }
 
         return toReturn;
+    }
+
+    public Collection<LocalZoneState> complement() {
+        ArrayList<LocalZoneState> results = new ArrayList<>();
+        // Process-DBM map where all the DBMs are the top value
+        final var topMap = localDBMs.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, entry -> DBM.topOf(entry.getValue())));
+        for (var pair : localDBMs.entrySet()) {
+            for (var complementDBM : pair.getValue().complement()) {
+                var copyMap = new HashMap<>(topMap);
+                copyMap.put(pair.getKey(), complementDBM);
+                results.add(new LocalZoneState(copyMap));
+            }
+        }
+        return results;
     }
 
     public static LocalZoneState zero(final Map<XtaProcess, Collection<VarDecl<RatType>>> clocksProcessMap, boolean addLocalRef) {
