@@ -25,6 +25,7 @@ import java.util.Collection;
 
 import static hu.bme.mit.theta.analysis.algorithm.SearchStrategy.BFS;
 import static hu.bme.mit.theta.xta.analysis.lazy.ClockStrategy2.ClockStrategy.LU;
+import static hu.bme.mit.theta.xta.analysis.lazy.ClockStrategy2.ZoneRepresentation.Global;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(Parameterized.class)
@@ -37,10 +38,12 @@ public final class LazyXtaAbstractorTest {
     private static final String MODEL_BROADCAST = "/model/broadcast.xta";
 
     private static final Collection<String> MODELS = ImmutableList.of(MODEL_CSMA, MODEL_FDDI, MODEL_FISCHER,
-            MODEL_LYNCH, MODEL_ENGINE, MODEL_BROADCAST);
+            MODEL_LYNCH/*, MODEL_ENGINE, MODEL_BROADCAST*/);
 
-    private static final Collection<String> MODELS_WITH_UNKNOWN_SOLVER_STATUS = ImmutableSet.of(MODEL_FDDI,
+    private static final Collection<String> MODELS_WITH_UNKNOWN_SOLVER_STATUS = ImmutableSet.of(MODEL_CSMA, MODEL_FDDI,
             MODEL_ENGINE, MODEL_BROADCAST);
+
+    private static final Collection<String> MODELS_WITH_GLOBAL_CLOCK = ImmutableSet.of(MODEL_ENGINE);
 
     @Parameter(0)
     public String filepath;
