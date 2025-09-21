@@ -176,7 +176,7 @@ public final class LazyXtaAbstractorConfigFactory {
         private Analysis createConcrClockAnalysis() {
             return switch (clockStrategy.getClockStrategy()) {
                 case FWITP, BWITP, LU -> switch (clockStrategy.getZoneRepresentation()) {
-                    case Global -> XtaZoneAnalysis.create(system.getInitLocs());;
+                    case Global -> XtaZoneAnalysis.create(system.getInitLocs());
                     case Local -> new XtaLocalAnalysis(LocalZoneOrd.getInstance());
                     case LocalSyncSub -> new XtaLocalAnalysis(LocalZoneSyncSubsumptionOrd.getInstance());
                 };

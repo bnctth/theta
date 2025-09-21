@@ -101,7 +101,10 @@ public final class XtaCli {
 	/// Common algorithm parameters
 
 	@Parameter(names = {"--clock", "-c"}, description = "Refinement strategy for clock variables", required = false)
-	ClockStrategy2 clockStrategy = ClockStrategy2.BWITP;
+	ClockStrategy2.ClockStrategy clockStrategy = ClockStrategy2.ClockStrategy.BWITP;
+
+	@Parameter(names = {"--zone-repr", "-z"}, description = "Zone representation", required = false)
+	ClockStrategy2.ZoneRepresentation zoneRepresentation = ClockStrategy2.ZoneRepresentation.Global;
 
 	@Parameter(names = {"--search", "-s"}, description = "Search strategy", required = false)
 	SearchStrategy searchStrategy = SearchStrategy.BFS;
@@ -171,7 +174,7 @@ public final class XtaCli {
 	private void runLazy(final XtaSystem system) {
 		final LazyXtaAbstractorConfig<?, ?, ?> abstractor = LazyXtaAbstractorConfigFactory.create(
 			system, new DataStrategy2(concrDataDom, abstrDataDom, dataItpStrategy),
-			clockStrategy, searchStrategy, exprMeetStrategy
+			new ClockStrategy2(clockStrategy, zoneRepresentation), searchStrategy, exprMeetStrategy
 		);
 		final var result = abstractor.check();
 		resultPrinter(result.isSafe(), result.isUnsafe(), system);
