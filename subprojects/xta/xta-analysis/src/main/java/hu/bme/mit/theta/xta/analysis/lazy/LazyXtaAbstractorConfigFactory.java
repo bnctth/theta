@@ -35,10 +35,8 @@ import hu.bme.mit.theta.xta.analysis.zone.XtaZoneInvTransFunc;
 import hu.bme.mit.theta.xta.analysis.zone.XtaZoneTransFunc;
 import hu.bme.mit.theta.xta.analysis.zone.lu.LuZoneState;
 import hu.bme.mit.theta.xta.local_analysis.*;
-import hu.bme.mit.theta.xta.local_analysis.localzone.LocalZonePrec;
-import hu.bme.mit.theta.xta.local_analysis.localzone.LocalZoneState;
+import hu.bme.mit.theta.xta.local_analysis.localzone.*;
 
-import javax.naming.OperationNotSupportedException;
 import java.util.function.Function;
 
 import static hu.bme.mit.theta.core.type.booltype.BoolExprs.True;

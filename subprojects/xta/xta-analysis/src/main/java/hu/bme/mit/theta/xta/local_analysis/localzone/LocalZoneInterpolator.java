@@ -1,7 +1,6 @@
-package hu.bme.mit.theta.xta.local_analysis;
+package hu.bme.mit.theta.xta.local_analysis.localzone;
 
 import hu.bme.mit.theta.analysis.algorithm.lazy.itp.Interpolator;
-import hu.bme.mit.theta.xta.local_analysis.localzone.LocalZoneState;
 
 import java.util.Collection;
 

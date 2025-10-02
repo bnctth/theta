@@ -1,6 +1,5 @@
 package hu.bme.mit.theta.xta.analysis;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import hu.bme.mit.theta.analysis.algorithm.ArgChecker;
 import hu.bme.mit.theta.analysis.expr.ExprMeetStrategy;
@@ -22,10 +21,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import static hu.bme.mit.theta.analysis.algorithm.SearchStrategy.BFS;
 import static hu.bme.mit.theta.xta.analysis.lazy.ClockStrategy2.ClockStrategy.LU;
-import static hu.bme.mit.theta.xta.analysis.lazy.ClockStrategy2.ZoneRepresentation.Global;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(Parameterized.class)
@@ -37,7 +36,7 @@ public final class LazyXtaAbstractorTest {
     private static final String MODEL_ENGINE = "/model/engine-classic.xta";
     private static final String MODEL_BROADCAST = "/model/broadcast.xta";
 
-    private static final Collection<String> MODELS = ImmutableList.of(MODEL_CSMA, MODEL_FDDI, MODEL_FISCHER,
+    private static final Collection<String> MODELS = List.of(MODEL_CSMA, MODEL_FDDI, MODEL_FISCHER,
             MODEL_LYNCH/*, MODEL_ENGINE, MODEL_BROADCAST*/);
 
     private static final Collection<String> MODELS_WITH_UNKNOWN_SOLVER_STATUS = ImmutableSet.of(MODEL_CSMA, MODEL_FDDI,

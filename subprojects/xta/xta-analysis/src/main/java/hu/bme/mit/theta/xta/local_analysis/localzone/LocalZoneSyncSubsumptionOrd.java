@@ -1,7 +1,7 @@
-package hu.bme.mit.theta.xta.local_analysis;
+package hu.bme.mit.theta.xta.local_analysis.localzone;
 
 import hu.bme.mit.theta.analysis.PartialOrd;
-import hu.bme.mit.theta.xta.local_analysis.localzone.LocalZoneState;
+import hu.bme.mit.theta.xta.local_analysis.XtaLocalZoneUtils;
 
 public final class LocalZoneSyncSubsumptionOrd implements PartialOrd<LocalZoneState> {
     private static final LocalZoneSyncSubsumptionOrd INSTANCE = new LocalZoneSyncSubsumptionOrd();

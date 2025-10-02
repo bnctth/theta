@@ -1,10 +1,7 @@
-package hu.bme.mit.theta.xta.local_analysis;
+package hu.bme.mit.theta.xta.local_analysis.localzone;
 
 import hu.bme.mit.theta.analysis.Lattice;
 import hu.bme.mit.theta.analysis.PartialOrd;
-import hu.bme.mit.theta.xta.local_analysis.localzone.LocalZoneState;
-import hu.bme.mit.theta.xta.local_analysis.localzone.LocalZoneStateBottom;
-import hu.bme.mit.theta.xta.local_analysis.localzone.LocalZoneStateTop;
 
 public final class LocalZoneLattice implements Lattice<LocalZoneState> {
 
