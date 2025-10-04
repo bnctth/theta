@@ -1,6 +1,8 @@
-package hu.bme.mit.theta.xta.local_analysis;
+package hu.bme.mit.theta.xta.local_analysis.global_local;
 
 import hu.bme.mit.theta.xta.analysis.XtaAction;
+import hu.bme.mit.theta.xta.local_analysis.ActionFactory;
+import hu.bme.mit.theta.xta.local_analysis.XtaAndAnIntAction;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -14,7 +16,7 @@ public class GLXtaAction extends XtaAndAnIntAction {
     }
 
     @Override
-    boolean shouldKeep() {
+    public boolean shouldKeep() {
         checkArgument(!action.isBinary());
 
         var involvedProcesses = involvedProcesses();
@@ -25,7 +27,7 @@ public class GLXtaAction extends XtaAndAnIntAction {
     }
 
     @Override
-    int rPrime() {
+    public int rPrime() {
         checkArgument(!action.isBinary());
 
         if (action.isBasic()) {

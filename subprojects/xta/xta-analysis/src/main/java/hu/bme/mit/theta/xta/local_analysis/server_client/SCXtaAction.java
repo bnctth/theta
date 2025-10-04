@@ -1,6 +1,8 @@
-package hu.bme.mit.theta.xta.local_analysis;
+package hu.bme.mit.theta.xta.local_analysis.server_client;
 
 import hu.bme.mit.theta.xta.analysis.XtaAction;
+import hu.bme.mit.theta.xta.local_analysis.ActionFactory;
+import hu.bme.mit.theta.xta.local_analysis.XtaAndAnIntAction;
 
 import java.util.List;
 
@@ -16,14 +18,14 @@ public class SCXtaAction extends XtaAndAnIntAction {
     }
 
     @Override
-    boolean shouldKeep() {
+    public boolean shouldKeep() {
         checkArgument(!action.isBroadcast());
 
         return r == 0 || involvedProcesses().contains(r);
     }
 
     @Override
-    int rPrime() {
+    public int rPrime() {
         List<Integer> involvedProcesses = involvedProcesses();
         if (involvedProcesses.contains(0)) {
             return 0;

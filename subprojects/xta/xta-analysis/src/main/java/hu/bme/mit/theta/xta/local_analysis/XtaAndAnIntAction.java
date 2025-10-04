@@ -10,8 +10,8 @@ import java.util.List;
 import java.util.stream.Stream;
 
 public abstract class XtaAndAnIntAction extends StmtAction {
-    final XtaAction action;
-    final int r;
+    protected final XtaAction action;
+    protected final int r;
 
     protected XtaAndAnIntAction(XtaAction action, int r) {
         this.action = action;
@@ -55,7 +55,7 @@ public abstract class XtaAndAnIntAction extends StmtAction {
         throw new IllegalArgumentException("Unknown action type");
     }
 
-    abstract boolean shouldKeep();
+    public abstract boolean shouldKeep();
 
-    abstract int rPrime();
+    public abstract int rPrime();
 }
