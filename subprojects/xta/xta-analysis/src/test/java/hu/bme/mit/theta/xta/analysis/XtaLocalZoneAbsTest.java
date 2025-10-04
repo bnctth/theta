@@ -8,7 +8,7 @@ import java.util.Collection;
 import java.util.stream.Collectors;
 
 import hu.bme.mit.theta.xta.local_analysis.localzone.LocalZoneOrd;
-import hu.bme.mit.theta.xta.local_analysis.XtaLocalAnalysis;
+import hu.bme.mit.theta.xta.local_analysis.localzone.XtaLocalAnalysis;
 import hu.bme.mit.theta.xta.local_analysis.localzone.LocalZonePrec;
 import hu.bme.mit.theta.xta.local_analysis.localzone.LocalZoneState;
 import org.junit.Test;

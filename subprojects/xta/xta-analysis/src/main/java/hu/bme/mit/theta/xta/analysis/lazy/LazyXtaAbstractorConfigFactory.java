@@ -34,7 +34,6 @@ import hu.bme.mit.theta.xta.analysis.zone.XtaZoneAnalysis;
 import hu.bme.mit.theta.xta.analysis.zone.XtaZoneInvTransFunc;
 import hu.bme.mit.theta.xta.analysis.zone.XtaZoneTransFunc;
 import hu.bme.mit.theta.xta.analysis.zone.lu.LuZoneState;
-import hu.bme.mit.theta.xta.local_analysis.*;
 import hu.bme.mit.theta.xta.local_analysis.localzone.*;
 
 import java.util.function.Function;

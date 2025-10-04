@@ -22,13 +22,11 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Queue;
 
-import hu.bme.mit.theta.analysis.LTS;
 import hu.bme.mit.theta.analysis.waitlist.LifoWaitlist;
 import hu.bme.mit.theta.analysis.waitlist.Waitlist;
-import hu.bme.mit.theta.xta.local_analysis.XtaLocalInitFunc;
-import hu.bme.mit.theta.xta.local_analysis.XtaLocalTransFunc;
+import hu.bme.mit.theta.xta.local_analysis.localzone.XtaLocalInitFunc;
+import hu.bme.mit.theta.xta.local_analysis.localzone.XtaLocalTransFunc;
 import hu.bme.mit.theta.xta.local_analysis.localzone.LocalZonePrec;
 import org.junit.Test;
 import org.junit.runner.RunWith;

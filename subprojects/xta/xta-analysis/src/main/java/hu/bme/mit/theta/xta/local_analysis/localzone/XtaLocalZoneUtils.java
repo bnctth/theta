@@ -1,10 +1,8 @@
-package hu.bme.mit.theta.xta.local_analysis;
+package hu.bme.mit.theta.xta.local_analysis.localzone;
 
 import com.google.common.collect.Lists;
 
 import hu.bme.mit.theta.core.clock.constr.ClockConstrs;
-import hu.bme.mit.theta.xta.local_analysis.localzone.LocalZonePrec;
-import hu.bme.mit.theta.xta.local_analysis.localzone.LocalZoneState;
 import hu.bme.mit.theta.analysis.zone.DBM;
 import hu.bme.mit.theta.analysis.zone.ZoneState;
 import hu.bme.mit.theta.core.clock.op.ResetOp;

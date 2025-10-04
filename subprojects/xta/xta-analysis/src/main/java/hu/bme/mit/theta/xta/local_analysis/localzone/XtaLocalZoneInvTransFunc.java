@@ -1,10 +1,8 @@
-package hu.bme.mit.theta.xta.local_analysis;
+package hu.bme.mit.theta.xta.local_analysis.localzone;
 
 import com.google.common.collect.ImmutableList;
 import hu.bme.mit.theta.analysis.InvTransFunc;
 import hu.bme.mit.theta.xta.analysis.XtaAction;
-import hu.bme.mit.theta.xta.local_analysis.localzone.LocalZonePrec;
-import hu.bme.mit.theta.xta.local_analysis.localzone.LocalZoneState;
 
 import java.util.Collection;
 

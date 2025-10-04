@@ -1,4 +1,4 @@
-package hu.bme.mit.theta.xta.local_analysis;
+package hu.bme.mit.theta.xta.local_analysis.localzone;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -6,9 +6,6 @@ import java.util.Collection;
 import java.util.Collections;
 
 import hu.bme.mit.theta.analysis.InitFunc;
-
-import hu.bme.mit.theta.xta.local_analysis.localzone.LocalZonePrec;
-import hu.bme.mit.theta.xta.local_analysis.localzone.LocalZoneState;
 
 public final class XtaLocalInitFunc implements InitFunc<LocalZoneState, LocalZonePrec> {
 
