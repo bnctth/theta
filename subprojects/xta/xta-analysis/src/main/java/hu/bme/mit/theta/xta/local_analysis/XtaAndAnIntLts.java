@@ -8,7 +8,7 @@ import java.util.Collection;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class XtaAndAnIntLts implements LTS<XtaAndAnIntState<?>, XtaAndAnIntAction> {
+public final class XtaAndAnIntLts implements LTS<XtaAndAnIntState<?>, XtaAndAnIntAction> {
     final XtaLts lts;
     final ActionFactory factory;
 

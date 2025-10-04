@@ -6,7 +6,7 @@ import hu.bme.mit.theta.xta.local_analysis.XtaAndAnIntAction;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-public class GLXtaAction extends XtaAndAnIntAction {
+public final class GLXtaAction extends XtaAndAnIntAction {
     public GLXtaAction(XtaAction action, int r) {
         super(action, r);
     }

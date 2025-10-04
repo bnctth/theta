@@ -6,8 +6,8 @@ import hu.bme.mit.theta.xta.analysis.XtaState;
 import hu.bme.mit.theta.xta.local_analysis.XtaAndAnIntOrd;
 import hu.bme.mit.theta.xta.local_analysis.XtaAndAnIntState;
 
-public class SCXtaOrd<S extends State> extends XtaAndAnIntOrd<S> {
-    protected SCXtaOrd(PartialOrd<XtaState<S>> partialOrd) {
+public final class SCXtaOrd<S extends State> extends XtaAndAnIntOrd<S> {
+    public SCXtaOrd(PartialOrd<XtaState<S>> partialOrd) {
         super(partialOrd);
     }
 

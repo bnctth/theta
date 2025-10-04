@@ -8,7 +8,7 @@ import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-public class SCXtaAction extends XtaAndAnIntAction {
+public final class SCXtaAction extends XtaAndAnIntAction {
     public SCXtaAction(XtaAction action, int r) {
         super(action, r);
     }

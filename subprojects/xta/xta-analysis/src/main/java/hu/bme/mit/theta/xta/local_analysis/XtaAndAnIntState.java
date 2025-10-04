@@ -14,7 +14,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
-public class XtaAndAnIntState<S extends State> implements ExprState {
+public final class XtaAndAnIntState<S extends State> implements ExprState {
     private static final int HASH_SEED = 8291;
     private volatile int hashCode = 0;
 

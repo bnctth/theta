@@ -9,7 +9,7 @@ import java.util.Collection;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-final class XtaAndAnIntTransFunc<S extends State, P extends Prec> implements TransFunc<XtaAndAnIntState<S>, XtaAndAnIntAction, P> {
+public final class XtaAndAnIntTransFunc<S extends State, P extends Prec> implements TransFunc<XtaAndAnIntState<S>, XtaAndAnIntAction, P> {
 
     private final XtaTransFunc<S, P> transFunc;
 
