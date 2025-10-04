@@ -26,7 +26,7 @@ import hu.bme.mit.theta.analysis.State;
 import hu.bme.mit.theta.analysis.TransFunc;
 import hu.bme.mit.theta.xta.XtaProcess.Loc;
 
-final class XtaTransFunc<S extends State, P extends Prec> implements TransFunc<XtaState<S>, XtaAction, P> {
+public final class XtaTransFunc<S extends State, P extends Prec> implements TransFunc<XtaState<S>, XtaAction, P> {
 
 	private final TransFunc<S, ? super XtaAction, ? super P> transFunc;
 

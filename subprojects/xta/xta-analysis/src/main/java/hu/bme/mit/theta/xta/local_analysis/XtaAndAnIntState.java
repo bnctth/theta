@@ -18,12 +18,20 @@ public class XtaAndAnIntState<S extends State> implements ExprState {
     private static final int HASH_SEED = 8291;
     private volatile int hashCode = 0;
 
-    private int r;
-    private XtaState<S> state;
+    private final int r;
+    private final XtaState<S> state;
 
     public XtaAndAnIntState(XtaState<S> state, int r) {
         this.state = state;
         this.r = r;
+    }
+
+    public int getR() {
+        return r;
+    }
+
+    public XtaState<S> getState() {
+        return state;
     }
 
     public static <S extends State> XtaAndAnIntState<S> of(final List<XtaProcess.Loc> locs, final S state, int r) {
