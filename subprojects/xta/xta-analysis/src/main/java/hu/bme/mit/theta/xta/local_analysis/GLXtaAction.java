@@ -9,6 +9,10 @@ public class GLXtaAction extends XtaAndAnIntAction {
         super(action, r);
     }
 
+    public static ActionFactory factory() {
+        return GLXtaAction::new;
+    }
+
     @Override
     boolean shouldKeep() {
         checkArgument(!action.isBinary());

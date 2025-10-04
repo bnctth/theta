@@ -8,11 +8,11 @@ import java.util.Collection;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class GLXtaLts implements LTS<XtaAndAnIntState<?>, XtaAndAnIntAction> {
+public class XtaAndAnIntLts implements LTS<XtaAndAnIntState<?>, XtaAndAnIntAction> {
     final XtaLts lts;
     final ActionFactory factory;
 
-    public GLXtaLts(final XtaSystem system, ActionFactory factory) {
+    public XtaAndAnIntLts(final XtaSystem system, ActionFactory factory) {
         this.lts = XtaLts.create(checkNotNull(system));
         this.factory = checkNotNull(factory);
     }

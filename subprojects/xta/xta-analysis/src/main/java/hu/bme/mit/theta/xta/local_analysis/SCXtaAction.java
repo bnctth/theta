@@ -1,0 +1,34 @@
+package hu.bme.mit.theta.xta.local_analysis;
+
+import hu.bme.mit.theta.xta.analysis.XtaAction;
+
+import java.util.List;
+
+import static com.google.common.base.Preconditions.checkArgument;
+
+public class SCXtaAction extends XtaAndAnIntAction {
+    public SCXtaAction(XtaAction action, int r) {
+        super(action, r);
+    }
+
+    public static ActionFactory factory() {
+        return SCXtaAction::new;
+    }
+
+    @Override
+    boolean shouldKeep() {
+        checkArgument(!action.isBroadcast());
+
+        return r == 0 || involvedProcesses().contains(r);
+    }
+
+    @Override
+    int rPrime() {
+        List<Integer> involvedProcesses = involvedProcesses();
+        if (involvedProcesses.contains(0)) {
+            return 0;
+        }
+        assert involvedProcesses.size() == 1 && involvedProcesses.get(0) > 0;
+        return involvedProcesses.get(0);
+    }
+}
