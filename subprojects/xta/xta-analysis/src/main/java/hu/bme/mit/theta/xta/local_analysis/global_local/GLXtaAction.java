@@ -1,7 +1,6 @@
 package hu.bme.mit.theta.xta.local_analysis.global_local;
 
 import hu.bme.mit.theta.xta.analysis.XtaAction;
-import hu.bme.mit.theta.xta.local_analysis.ActionFactory;
 import hu.bme.mit.theta.xta.local_analysis.XtaAndAnIntAction;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -9,10 +8,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 public final class GLXtaAction extends XtaAndAnIntAction {
     public GLXtaAction(XtaAction action, int r) {
         super(action, r);
-    }
-
-    public static ActionFactory factory() {
-        return GLXtaAction::new;
     }
 
     @Override

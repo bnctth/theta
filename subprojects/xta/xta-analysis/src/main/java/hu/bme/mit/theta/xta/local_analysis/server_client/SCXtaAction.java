@@ -1,7 +1,6 @@
 package hu.bme.mit.theta.xta.local_analysis.server_client;
 
 import hu.bme.mit.theta.xta.analysis.XtaAction;
-import hu.bme.mit.theta.xta.local_analysis.ActionFactory;
 import hu.bme.mit.theta.xta.local_analysis.XtaAndAnIntAction;
 
 import java.util.List;
@@ -11,10 +10,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 public final class SCXtaAction extends XtaAndAnIntAction {
     public SCXtaAction(XtaAction action, int r) {
         super(action, r);
-    }
-
-    public static ActionFactory factory() {
-        return SCXtaAction::new;
     }
 
     @Override

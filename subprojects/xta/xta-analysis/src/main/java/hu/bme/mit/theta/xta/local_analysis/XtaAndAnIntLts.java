@@ -10,11 +10,15 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class XtaAndAnIntLts implements LTS<XtaAndAnIntState<?>, XtaAndAnIntAction> {
     final XtaLts lts;
-    final ActionFactory factory;
+    final SystemTypeFactory<?, ?> factory;
 
-    public XtaAndAnIntLts(final XtaSystem system, ActionFactory factory) {
+    private XtaAndAnIntLts(final XtaSystem system, SystemTypeFactory<?, ?> factory) {
         this.lts = XtaLts.create(checkNotNull(system));
         this.factory = checkNotNull(factory);
+    }
+
+    public static XtaAndAnIntLts create(final XtaSystem system, SystemTypeFactory<?, ?> factory){
+        return new XtaAndAnIntLts(system, factory);
     }
 
     @Override

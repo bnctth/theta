@@ -23,10 +23,14 @@ public final class XtaAndAnIntAnalysis<S extends State, P extends Prec> implemen
     private final InitFunc<XtaAndAnIntState<S>, P> initFunc;
     private final TransFunc<XtaAndAnIntState<S>, XtaAndAnIntAction, P> transFunc;
 
-    public XtaAndAnIntAnalysis(final XtaAnalysis<S,P> xtaAnalysis, final SystemTypeFactory<S, P> factory) {
+    private XtaAndAnIntAnalysis(final XtaAnalysis<S, P> xtaAnalysis, final SystemTypeFactory<S, P> factory) {
         this.partialOrd = factory.createOrd(xtaAnalysis.getPartialOrd());
         this.initFunc = factory.createInitFunc(xtaAnalysis.getInitFunc());
         this.transFunc = XtaAndAnIntTransFunc.create(xtaAnalysis.getTransFunc());
+    }
+
+    public static <S extends State, P extends Prec> XtaAndAnIntAnalysis<S, P> create(final XtaAnalysis<S, P> xtaAnalysis, final SystemTypeFactory<S, P> factory) {
+        return new XtaAndAnIntAnalysis<>(xtaAnalysis, factory);
     }
 
     @Override
