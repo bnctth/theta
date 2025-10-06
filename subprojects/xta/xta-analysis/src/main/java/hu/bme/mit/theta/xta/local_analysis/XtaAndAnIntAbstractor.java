@@ -28,7 +28,7 @@ public class XtaAndAnIntAbstractor {
     private ARG<LazyState<XtaAndAnIntState<LocalZoneState>, XtaAndAnIntState<LocalZoneState>>, XtaAndAnIntAction> arg;
 
     public XtaAndAnIntAbstractor(XtaSystem system, SystemTypeFactory<LocalZoneState, LocalZonePrec> factory, final ClockStrategy2 clockStrategy, final SearchStrategy searchStrategy) {
-        var lazyStrategy=createLazyStrategy(system, clockStrategy);
+        var lazyStrategy = createLazyStrategy(system, clockStrategy);
 
         lazyXtaAbstractor = new LazyAbstractor<>(
                 XtaAndAnIntLts.create(system, factory),
@@ -45,7 +45,7 @@ public class XtaAndAnIntAbstractor {
         final PartialOrd<LocalZoneState> partialOrd = LocalZoneSyncSubsumptionOrd.getInstance();
 
         final Lens<LazyState<XtaAndAnIntState<LocalZoneState>, XtaAndAnIntState<LocalZoneState>>, LazyState<LocalZoneState, LocalZoneState>>
-                lens = LazyXtaLensUtils.createLazyClockLens();
+                lens = XtaAndAnIntLazyClockLens.of(LazyXtaLensUtils.createLazyClockLens());
         final Lattice<LocalZoneState> lattice = new LocalZoneLattice(partialOrd);
         final Interpolator<LocalZoneState, LocalZoneState> interpolator = LocalZoneInterpolator.getInstance();
         final Concretizer<LocalZoneState, LocalZoneState> concretizer = BasicConcretizer.create(partialOrd);
@@ -61,7 +61,6 @@ public class XtaAndAnIntAbstractor {
             default -> throw new AssertionError();
         };
     }
-
 
 
     public AbstractorResult check() {

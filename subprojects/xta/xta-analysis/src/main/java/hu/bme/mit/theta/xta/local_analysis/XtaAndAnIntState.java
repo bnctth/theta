@@ -34,29 +34,10 @@ public final class XtaAndAnIntState<S extends State> implements ExprState {
         return state;
     }
 
-    public static <S extends State> XtaAndAnIntState<S> of(final List<XtaProcess.Loc> locs, final S state, int r) {
-        return new XtaAndAnIntState<>(XtaState.of(locs, state, ImmutableValuation.empty()), r);
+    public static <S extends State> XtaAndAnIntState<S> of(final XtaState<S> state, int r) {
+        return new XtaAndAnIntState<>(state, r);
     }
 
-    public static <S extends State> XtaAndAnIntState<S> of(final List<XtaProcess.Loc> locs, final S state, Valuation valuation, int r) {
-        return new XtaAndAnIntState<>(XtaState.of(locs, state, valuation), r);
-    }
-
-    public static <S extends State> Collection<XtaAndAnIntState<S>> collectionOf(final List<XtaProcess.Loc> locs,
-                                                                                 final Collection<? extends S> states, int r) {
-        return collectionOf(locs, states, ImmutableValuation.empty(), r);
-    }
-
-    public static <S extends State> Collection<XtaAndAnIntState<S>> collectionOf(final List<XtaProcess.Loc> locs,
-                                                                                 final Collection<? extends S> states,
-                                                                                 final Valuation valuation, int r) {
-        final Collection<XtaAndAnIntState<S>> result = new ArrayList<>();
-        for (final S state : states) {
-            final XtaAndAnIntState<S> initXtaState = new XtaAndAnIntState<>(XtaState.of(locs, state, valuation), r);
-            result.add(initXtaState);
-        }
-        return result;
-    }
 
     @Override
     public Expr<BoolType> toExpr() {
