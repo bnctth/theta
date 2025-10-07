@@ -10,8 +10,12 @@ public final class XtaAndAnIntInitAbstractor<SConcr extends State, SAbstr extend
 
     private final InitAbstractor<XtaState<SConcr>, XtaState<SAbstr>> initAbstractor;
 
-    public XtaAndAnIntInitAbstractor(final InitAbstractor<XtaState<SConcr>, XtaState<SAbstr>> initAbstractor) {
+    private XtaAndAnIntInitAbstractor(final InitAbstractor<XtaState<SConcr>, XtaState<SAbstr>> initAbstractor) {
         this.initAbstractor = checkNotNull(initAbstractor);
+    }
+
+    public static <SConcr extends State, SAbstr extends State> XtaAndAnIntInitAbstractor<SConcr, SAbstr> create(final InitAbstractor<XtaState<SConcr>, XtaState<SAbstr>> initAbstractor) {
+        return new XtaAndAnIntInitAbstractor<>(initAbstractor);
     }
 
     @Override

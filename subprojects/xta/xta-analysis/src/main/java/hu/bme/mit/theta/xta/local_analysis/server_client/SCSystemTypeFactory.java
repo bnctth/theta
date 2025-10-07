@@ -12,21 +12,21 @@ import hu.bme.mit.theta.xta.local_analysis.XtaAndAnIntInitFunc;
 import hu.bme.mit.theta.xta.local_analysis.XtaAndAnIntOrd;
 import hu.bme.mit.theta.xta.local_analysis.global_local.GLXtaAction;
 
-public class SCSystemTypeFactory<S extends State, P extends Prec> implements SystemTypeFactory<S, P> {
+public class SCSystemTypeFactory implements SystemTypeFactory{
     private SCSystemTypeFactory() {
     }
 
-    public static <S extends State, P extends Prec> SCSystemTypeFactory<S, P> create() {
-        return new SCSystemTypeFactory<>();
+    public static SCSystemTypeFactory create() {
+        return new SCSystemTypeFactory();
     }
 
     @Override
-    public XtaAndAnIntOrd<S> createOrd(PartialOrd<XtaState<S>> partialOrd) {
+    public<S extends State>  XtaAndAnIntOrd<S> createOrd(PartialOrd<XtaState<S>> partialOrd) {
         return new SCXtaOrd<>(partialOrd);
     }
 
     @Override
-    public XtaAndAnIntInitFunc<S, P> createInitFunc(InitFunc<XtaState<S>, P> initFunc) {
+    public <S extends State, P extends Prec> XtaAndAnIntInitFunc<S, P> createInitFunc(InitFunc<XtaState<S>, P> initFunc) {
         return new SCXtaInitFunc<>(initFunc);
     }
 

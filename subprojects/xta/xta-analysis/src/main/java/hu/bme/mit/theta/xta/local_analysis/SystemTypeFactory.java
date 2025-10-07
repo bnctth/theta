@@ -7,10 +7,10 @@ import hu.bme.mit.theta.analysis.State;
 import hu.bme.mit.theta.xta.analysis.XtaAction;
 import hu.bme.mit.theta.xta.analysis.XtaState;
 
-public interface SystemTypeFactory<S extends State, P extends Prec> {
-    XtaAndAnIntOrd<S> createOrd(PartialOrd<XtaState<S>> partialOrd);
+public interface SystemTypeFactory {
+    <S extends State> XtaAndAnIntOrd<S> createOrd(PartialOrd<XtaState<S>> partialOrd);
 
-    XtaAndAnIntInitFunc<S, P> createInitFunc(InitFunc<XtaState<S>, P> initFunc);
+    <S extends State, P extends Prec> XtaAndAnIntInitFunc<S, P> createInitFunc(InitFunc<XtaState<S>, P> initFunc);
 
     XtaAndAnIntAction createAction(XtaAction action, int r);
 }

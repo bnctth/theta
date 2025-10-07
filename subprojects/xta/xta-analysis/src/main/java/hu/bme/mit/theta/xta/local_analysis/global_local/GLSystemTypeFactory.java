@@ -12,21 +12,21 @@ import hu.bme.mit.theta.xta.local_analysis.XtaAndAnIntInitFunc;
 import hu.bme.mit.theta.xta.local_analysis.XtaAndAnIntOrd;
 import hu.bme.mit.theta.xta.local_analysis.server_client.SCXtaAction;
 
-public class GLSystemTypeFactory<S extends State, P extends Prec> implements SystemTypeFactory<S, P> {
+public class GLSystemTypeFactory implements SystemTypeFactory {
     private GLSystemTypeFactory() {
     }
 
-    public static <S extends State, P extends Prec> GLSystemTypeFactory<S, P> create() {
-        return new GLSystemTypeFactory<>();
+    public static GLSystemTypeFactory create() {
+        return new GLSystemTypeFactory();
     }
 
     @Override
-    public XtaAndAnIntOrd<S> createOrd(PartialOrd<XtaState<S>> partialOrd) {
+    public <S extends State> XtaAndAnIntOrd<S> createOrd(PartialOrd<XtaState<S>> partialOrd) {
         return new GLXtaOrd<>(partialOrd);
     }
 
     @Override
-    public XtaAndAnIntInitFunc<S, P> createInitFunc(InitFunc<XtaState<S>, P> initFunc) {
+    public <S extends State, P extends Prec>  XtaAndAnIntInitFunc<S, P> createInitFunc(InitFunc<XtaState<S>, P> initFunc) {
         return new GLXtaInitFunc<>(initFunc);
     }
 

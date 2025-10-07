@@ -10,14 +10,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class XtaAndAnIntLts implements LTS<XtaAndAnIntState<?>, XtaAndAnIntAction> {
     final XtaLts lts;
-    final SystemTypeFactory<?, ?> factory;
+    final SystemTypeFactory factory;
 
-    private XtaAndAnIntLts(final XtaSystem system, SystemTypeFactory<?, ?> factory) {
+    private XtaAndAnIntLts(final XtaSystem system, SystemTypeFactory factory) {
         this.lts = XtaLts.create(checkNotNull(system));
         this.factory = checkNotNull(factory);
     }
 
-    public static XtaAndAnIntLts create(final XtaSystem system, SystemTypeFactory<?, ?> factory){
+    public static XtaAndAnIntLts create(final XtaSystem system, SystemTypeFactory factory){
         return new XtaAndAnIntLts(system, factory);
     }
 
