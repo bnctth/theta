@@ -26,12 +26,17 @@ public class GLSystemTypeFactory implements SystemTypeFactory {
     }
 
     @Override
-    public <S extends State, P extends Prec>  XtaAndAnIntInitFunc<S, P> createInitFunc(InitFunc<XtaState<S>, P> initFunc) {
+    public <S extends State, P extends Prec> XtaAndAnIntInitFunc<S, P> createInitFunc(InitFunc<XtaState<S>, P> initFunc) {
         return new GLXtaInitFunc<>(initFunc);
     }
 
     @Override
     public XtaAndAnIntAction createAction(XtaAction action, int r) {
         return new SCXtaAction(action, r);
+    }
+
+    @Override
+    public String toString() {
+        return "Server-client factory";
     }
 }

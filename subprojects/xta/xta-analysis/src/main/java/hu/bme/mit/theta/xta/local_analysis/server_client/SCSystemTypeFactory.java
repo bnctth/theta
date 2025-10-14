@@ -34,4 +34,9 @@ public class SCSystemTypeFactory implements SystemTypeFactory{
     public XtaAndAnIntAction createAction(XtaAction action, int r) {
         return new GLXtaAction(action, r);
     }
+
+    @Override
+    public String toString() {
+        return "Server-client factory";
+    }
 }
