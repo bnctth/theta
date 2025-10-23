@@ -58,4 +58,12 @@ public abstract class XtaAndAnIntAction extends StmtAction {
     public abstract boolean shouldKeep();
 
     public abstract int rPrime();
+
+    @Override
+    public String toString() {
+        return "XtaAndAnIntAction{" +
+                "action=" + action +
+                ", r=" + r +
+                '}';
+    }
 }

@@ -2,16 +2,10 @@ package hu.bme.mit.theta.xta.local_analysis;
 
 import hu.bme.mit.theta.analysis.State;
 import hu.bme.mit.theta.analysis.expr.ExprState;
-import hu.bme.mit.theta.core.model.ImmutableValuation;
-import hu.bme.mit.theta.core.model.Valuation;
 import hu.bme.mit.theta.core.type.Expr;
 import hu.bme.mit.theta.core.type.booltype.BoolType;
-import hu.bme.mit.theta.xta.XtaProcess;
 import hu.bme.mit.theta.xta.analysis.XtaState;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 import java.util.Objects;
 
 public final class XtaAndAnIntState<S extends State> implements ExprState {
@@ -65,4 +59,12 @@ public final class XtaAndAnIntState<S extends State> implements ExprState {
             hashCode = result;
         }
         return result;    }
+
+    @Override
+    public String toString() {
+        return "XtaAndAnIntState{" +
+                "state=" + state +
+                ", r=" + r +
+                '}';
+    }
 }

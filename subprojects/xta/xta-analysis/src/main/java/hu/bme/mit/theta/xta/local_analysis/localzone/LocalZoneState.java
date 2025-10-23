@@ -26,6 +26,8 @@ import hu.bme.mit.theta.analysis.expr.ExprState;
 import hu.bme.mit.theta.analysis.zone.BoundFunc;
 import hu.bme.mit.theta.analysis.zone.DBM;
 import hu.bme.mit.theta.analysis.zone.DbmRelation;
+import hu.bme.mit.theta.common.Tuple;
+import hu.bme.mit.theta.common.Tuple2;
 import hu.bme.mit.theta.common.Utils;
 import hu.bme.mit.theta.common.container.Containers;
 import hu.bme.mit.theta.core.clock.constr.ClockConstr;
@@ -151,7 +153,22 @@ public class LocalZoneState implements ExprState {
     }
 
     public static LocalZoneState interpolant(final LocalZoneState zone1, final LocalZoneState zone2) {
-        return new LocalZoneState(twoOperandLocalZoneCalc(zone1, zone2, (z1, z2) -> {return DBM.interpolant(z1, z2);}));
+        final var pairs1 = zone1.getLocalDbms();
+        final var pairs2 = zone2.getLocalDbms();
+        assert pairs1.size() == pairs2.size();
+        for (var process : pairs1.keySet()) {
+            if (!pairs1.get(process).isConsistentWith(pairs2.get(process))) {
+                var interpolatedPairs = pairs1.entrySet().stream().map(pair -> {
+                    if (pair.getKey().equals(process)) {
+                        return Tuple2.of(process, DBM.interpolant(pairs1.get(process), pairs2.get(process)));
+                    }
+                    return Tuple2.of(pair.getKey(), DBM.topOf(pair.getValue()));
+                }).collect(Collectors.toMap(Tuple2::get1, Tuple2::get2));
+                return new LocalZoneState(interpolatedPairs);
+            }
+        }
+
+        throw new IllegalStateException("No inconsistent DBMs found");
     }
 
     public static LocalZoneState weakInterpolant(final LocalZoneState zone1, final LocalZoneState zone2) {

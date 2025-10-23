@@ -311,6 +311,7 @@ public final class XtaLocalZoneUtils {
 
         List<DBM.ProcessDbmPair> actionDbmList = fixOrderedDbmList(sourceLocs, state);
         DBM jointDBM = DBM.joinDbms(actionDbmList);
+        jointDBM.close();
 
         final ZoneState.Builder preStateBuilder = ZoneState.Builder.project(jointDBM);
         if (shouldApplyDelay(involvedLocs)) {

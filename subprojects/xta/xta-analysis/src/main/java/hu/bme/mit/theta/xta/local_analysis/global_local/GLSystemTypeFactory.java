@@ -10,7 +10,6 @@ import hu.bme.mit.theta.xta.local_analysis.SystemTypeFactory;
 import hu.bme.mit.theta.xta.local_analysis.XtaAndAnIntAction;
 import hu.bme.mit.theta.xta.local_analysis.XtaAndAnIntInitFunc;
 import hu.bme.mit.theta.xta.local_analysis.XtaAndAnIntOrd;
-import hu.bme.mit.theta.xta.local_analysis.server_client.SCXtaAction;
 
 public class GLSystemTypeFactory implements SystemTypeFactory {
     private GLSystemTypeFactory() {
@@ -32,11 +31,11 @@ public class GLSystemTypeFactory implements SystemTypeFactory {
 
     @Override
     public XtaAndAnIntAction createAction(XtaAction action, int r) {
-        return new SCXtaAction(action, r);
+        return new GLXtaAction(action, r);
     }
 
     @Override
     public String toString() {
-        return "Server-client factory";
+        return "Globa-local factory";
     }
 }

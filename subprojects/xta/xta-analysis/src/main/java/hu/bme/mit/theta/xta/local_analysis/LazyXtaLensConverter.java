@@ -19,7 +19,7 @@ public class LazyXtaLensConverter<SConcr extends State, SAbstr extends State, S 
 
     private LazyState<XtaState<SConcr>, XtaState<SAbstr>> extendedToNormal(LazyState<XtaAndAnIntState<SConcr>, XtaAndAnIntState<SAbstr>> lazyState) {
         var concrState = lazyState.getConcrState().getState();
-        var abstrState = lazyState.getAbstrState().getState();
+        var abstrState = concrState.isBottom() ? null : lazyState.getAbstrState().getState();
         return LazyState.of(concrState, abstrState);
     }
 

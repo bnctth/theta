@@ -10,7 +10,6 @@ import hu.bme.mit.theta.xta.local_analysis.SystemTypeFactory;
 import hu.bme.mit.theta.xta.local_analysis.XtaAndAnIntAction;
 import hu.bme.mit.theta.xta.local_analysis.XtaAndAnIntInitFunc;
 import hu.bme.mit.theta.xta.local_analysis.XtaAndAnIntOrd;
-import hu.bme.mit.theta.xta.local_analysis.global_local.GLXtaAction;
 
 public class SCSystemTypeFactory implements SystemTypeFactory{
     private SCSystemTypeFactory() {
@@ -32,7 +31,7 @@ public class SCSystemTypeFactory implements SystemTypeFactory{
 
     @Override
     public XtaAndAnIntAction createAction(XtaAction action, int r) {
-        return new GLXtaAction(action, r);
+        return new SCXtaAction(action, r);
     }
 
     @Override

@@ -277,9 +277,18 @@ public final class XtaProcess {
         }
     }
 
-    public boolean equals(XtaProcess process) {
-        return this.name.equals(process.name);
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        XtaProcess that = (XtaProcess) o;
+        return Objects.equals(name, that.name);
     }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(name);
+    }
+
     ////
 
     public final class Edge {

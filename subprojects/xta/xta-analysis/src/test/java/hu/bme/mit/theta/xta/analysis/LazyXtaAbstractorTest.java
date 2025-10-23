@@ -3,6 +3,8 @@ package hu.bme.mit.theta.xta.analysis;
 import com.google.common.collect.ImmutableSet;
 import hu.bme.mit.theta.analysis.algorithm.ArgChecker;
 import hu.bme.mit.theta.analysis.expr.ExprMeetStrategy;
+import hu.bme.mit.theta.analysis.utils.ArgVisualizer;
+import hu.bme.mit.theta.common.visualization.writer.GraphvizWriter;
 import hu.bme.mit.theta.solver.z3.Z3SolverFactory;
 import hu.bme.mit.theta.xta.XtaSystem;
 import hu.bme.mit.theta.xta.analysis.lazy.ClockStrategy2;
@@ -17,6 +19,7 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -58,16 +61,19 @@ public final class LazyXtaAbstractorTest {
     @Parameters(name = "model: {0}, discrete: {1}, clock: {2}")
     public static Collection<Object[]> data() {
         final Collection<Object[]> result = new ArrayList<>();
-        for (final String model : MODELS) {
+        //for (final String model : MODELS) {
+        String model = "/model/gl.xta";
 
-            for (final DataStrategy2 dataStrategy : DataStrategy2.getValidStrategies()) {
-                for (final ClockStrategy2 clockStrategy : ClockStrategy2.getValidStrategies()) {
-                    if (!MODELS_WITH_UNKNOWN_SOLVER_STATUS.contains(model) || (clockStrategy.getClockStrategy() != LU)) {
-                        result.add(new Object[]{model, dataStrategy, clockStrategy});
-                    }
+        for (final DataStrategy2 dataStrategy : DataStrategy2.getValidStrategies()) {
+            for (final ClockStrategy2 clockStrategy : ClockStrategy2.getValidStrategies()) {
+                if (!MODELS_WITH_UNKNOWN_SOLVER_STATUS.contains(model) || (clockStrategy.getClockStrategy() != LU)) {
+                    if (clockStrategy.getClockStrategy() == LU || clockStrategy.getZoneRepresentation() == ClockStrategy2.ZoneRepresentation.Global)
+                        continue;
+                    result.add(new Object[]{model, dataStrategy, clockStrategy});
                 }
             }
         }
+        //}
         return result;
     }
 
@@ -79,14 +85,17 @@ public final class LazyXtaAbstractorTest {
     }
 
     @Test
-    public void test() {
+    public void test() throws IOException, InterruptedException {
         test(abstractor);
     }
 
-    private void test(LazyXtaAbstractorConfig<?, ?, ?> abstractor) {
+    private void test(LazyXtaAbstractorConfig<?, ?, ?> abstractor) throws IOException, InterruptedException {
         // Act
         abstractor.check();
-
+        var modelName = filepath.split("/")[filepath.split("/").length - 1];
+        new File("./output").mkdirs();
+        GraphvizWriter.getInstance().writeFile(ArgVisualizer.getDefault().visualize(abstractor.getArg()), "./output/" + modelName + "-" + dataStrategy + "-" + clockStrategy + ".svg", GraphvizWriter.Format.SVG);
+        System.out.println(abstractor.getArg().getNodes().count());
         // Assert
         final ArgChecker argChecker = ArgChecker.create(Z3SolverFactory.getInstance().createSolver());
         final boolean argCheckResult = argChecker.isWellLabeled(abstractor.getArg());

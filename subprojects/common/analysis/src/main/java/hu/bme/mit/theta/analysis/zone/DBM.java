@@ -686,7 +686,7 @@ public final class DBM {
         dbm.norm(k);
     }
 
-    private void close() {
+    public void close() {
         dbm.close();
     }
 

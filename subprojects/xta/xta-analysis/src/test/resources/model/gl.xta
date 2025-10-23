@@ -1,0 +1,52 @@
+// Place global declarations here.
+
+const int N = 2;
+typedef int[1, N] id_t;
+broadcast chan g;
+
+process P(const id_t pid) {
+
+// Place local declarations here.
+
+clock x, y;
+state
+    L0,
+    L1,
+    L2,
+    L3,
+    L4,
+    L5,
+    L6,
+    L7,
+    L8,
+    L9,
+    L10;
+init
+    L0;
+trans
+    L10 -> L1 { sync g?; },
+    L9 -> L1 { sync g?; },
+    L7 -> L9 { sync g?; },
+    L8 -> L9 { sync g?; },
+    L6 -> L9 { sync g?; },
+    L5 -> L6 { sync g?; },
+    L4 -> L6 { sync g?; },
+    L3 -> L6 { sync g?; },
+    L2 -> L3 { sync g?; },
+    L1 -> L3 { sync g?; },
+    L0 -> L1 { sync g?; },
+    L10 -> L0 { guard y<5; },
+    L9 -> L10 { assign y=0; },
+    L7 -> L9 { sync g!; },
+    L8 -> L9 { sync g!; },
+    L6 -> L8 { guard x<2; assign y=0; },
+    L6 -> L7 { guard y<10; assign x=0; },
+    L5 -> L6 { sync g!; },
+    L4 -> L5 { guard 5<y; assign x=0; },
+    L3 -> L4 { guard 2<y&&3<x; },
+    L2 -> L3 { sync g!; },
+    L1 -> L2 { guard x<3; assign y=0; },
+    L0 -> L1 { sync g!; };
+}
+
+system P;
