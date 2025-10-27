@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.List;
 
 import static hu.bme.mit.theta.analysis.algorithm.SearchStrategy.BFS;
+import static hu.bme.mit.theta.xta.analysis.lazy.ClockStrategy2.ClockStrategy.BWITP;
 import static hu.bme.mit.theta.xta.analysis.lazy.ClockStrategy2.ClockStrategy.LU;
 import static org.junit.Assert.assertTrue;
 
@@ -67,7 +68,7 @@ public final class LazyXtaAbstractorTest {
         for (final DataStrategy2 dataStrategy : DataStrategy2.getValidStrategies()) {
             for (final ClockStrategy2 clockStrategy : ClockStrategy2.getValidStrategies()) {
                 if (!MODELS_WITH_UNKNOWN_SOLVER_STATUS.contains(model) || (clockStrategy.getClockStrategy() != LU)) {
-                    if (clockStrategy.getClockStrategy() == LU || clockStrategy.getZoneRepresentation() == ClockStrategy2.ZoneRepresentation.Global)
+                    if (clockStrategy.getClockStrategy() != BWITP || clockStrategy.getZoneRepresentation() == ClockStrategy2.ZoneRepresentation.Global)
                         continue;
                     result.add(new Object[]{model, dataStrategy, clockStrategy});
                 }
