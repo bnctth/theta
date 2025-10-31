@@ -271,6 +271,10 @@ public final class DBM {
         return new DBM(DbmSignature.over(vars), dbm::getOrDefault);
     }
 
+    public static DBM project(final DBM dbmToProject, final DBM dbmForSignature) {
+        return new DBM(dbmForSignature.signature, dbmToProject::getOrDefault);
+    }
+
     /// /
 
     public static DBM intersection(final DBM dbm1, final DBM dbm2) {

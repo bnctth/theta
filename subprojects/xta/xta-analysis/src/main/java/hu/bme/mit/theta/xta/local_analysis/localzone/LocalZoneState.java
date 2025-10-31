@@ -26,6 +26,7 @@ import hu.bme.mit.theta.analysis.expr.ExprState;
 import hu.bme.mit.theta.analysis.zone.BoundFunc;
 import hu.bme.mit.theta.analysis.zone.DBM;
 import hu.bme.mit.theta.analysis.zone.DbmRelation;
+import hu.bme.mit.theta.analysis.zone.ZoneState;
 import hu.bme.mit.theta.common.Tuple;
 import hu.bme.mit.theta.common.Tuple2;
 import hu.bme.mit.theta.common.Utils;
@@ -176,7 +177,12 @@ public class LocalZoneState implements ExprState {
             if (!pairs1.get(process).isConsistentWith(pairs2.get(process))) {
                 var interpolatedPairs = pairs1.entrySet().stream().map(pair -> {
                     if (pair.getKey().equals(process)) {
-                        return Tuple2.of(process, DBM.interpolant(pairs1.get(process), pairs2.get(process)));
+                        return Tuple2.of(process,
+                                DBM.project(
+                                        DBM.interpolant(pairs1.get(process), pairs2.get(process)),
+                                        pairs1.get(process)
+                                        )
+                        );
                     }
                     return Tuple2.of(pair.getKey(), DBM.topOf(pair.getValue()));
                 }).collect(Collectors.toMap(Tuple2::get1, Tuple2::get2));
