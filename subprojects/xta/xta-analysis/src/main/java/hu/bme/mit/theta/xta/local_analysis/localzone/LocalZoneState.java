@@ -143,12 +143,28 @@ public class LocalZoneState implements ExprState {
     }
 
     public static LocalZoneState intersection(final LocalZoneState zone1, final LocalZoneState zone2) {
+        // These checks are used because syntactic-top and syntactic-bottom do not have a list of local DBMs,
+        //  so the general computation would fail on them
+        // instanceof is used instead of the semantic isTop and isBottom checks because semantic-top and semantic-bottom
+        //  represented by a full-fledged local zone with local DBMs can be handled by the generic part, so
+        //  it would be wasteful to always call the more costly semantic checks
+        if (zone1 instanceof LocalZoneStateTop) return zone2;
+        if (zone2 instanceof LocalZoneStateTop) return zone1;
+        if (zone1 instanceof LocalZoneStateBottom || zone2 instanceof LocalZoneStateBottom) return LocalZoneStateBottom.getInstance();
         // This may add an unnecessary function call to the mix, but it saves lots of coding lines, later it would be
         // good to check the technical options
         return new LocalZoneState(twoOperandLocalZoneCalc(zone1, zone2, (z1, z2) -> {return DBM.intersection(z1, z2);}));
     }
 
     public static LocalZoneState enclosure(final LocalZoneState zone1, final LocalZoneState zone2) {
+        // These checks are used because syntactic-top and syntactic-bottom do not have a list of local DBMs,
+        //  so the general computation would fail on them
+        // instanceof is used instead of the semantic isTop and isBottom checks because semantic-top and semantic-bottom
+        //  represented by a full-fledged local zone with local DBMs can be handled by the generic part, so
+        //  it would be wasteful to always call the more costly semantic checks
+        if (zone1 instanceof LocalZoneStateTop || zone2 instanceof LocalZoneStateTop) return LocalZoneStateTop.getInstance();
+        if (zone1 instanceof LocalZoneStateBottom) return zone2;
+        if (zone2 instanceof LocalZoneStateBottom) return zone1;
         return new LocalZoneState(twoOperandLocalZoneCalc(zone1, zone2, (z1, z2) -> {return DBM.enclosure(z1, z2);}));
     }
 

@@ -14,6 +14,16 @@ public class LocalZoneStateTop extends LocalZoneState {
         super();
     }
 
+    @Override
+    public boolean isTop() {
+        return true;
+    }
+
+    @Override
+    public boolean isBottom() {
+        return false;
+    }
+
     public static LocalZoneStateTop getInstance() { return INSTANCE; }
 
     @Override
