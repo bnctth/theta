@@ -18,9 +18,7 @@ import hu.bme.mit.theta.xta.analysis.XtaAction.BasicXtaAction;
 import hu.bme.mit.theta.xta.analysis.XtaAction.BinaryXtaAction;
 import hu.bme.mit.theta.xta.analysis.XtaAction.BroadcastXtaAction;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static hu.bme.mit.theta.core.clock.constr.ClockConstrs.Eq;
@@ -95,9 +93,7 @@ public final class XtaLocalZoneUtils {
             applySyncDelay(succStateBuilder);
         }
 
-        constructNewZone(targetLocs, succStateBuilder.getDbm().extractDbms(actionDbmList), state);
-
-        return state;
+        return constructNewZone(targetLocs, succStateBuilder.getDbm().extractDbms(actionDbmList), state);
     }
 
     private static LocalZoneState postForBroadcastAction(final LocalZoneState state,
@@ -134,9 +130,7 @@ public final class XtaLocalZoneUtils {
         if (shouldApplyDelay(action.getTargetLocs())) {
             applySyncDelay(succStateBuilder);
         }
-        constructNewZone(targetLocs, jointDBM.extractDbms(actionDbmList), state);
-
-        return state;
+        return constructNewZone(targetLocs, jointDBM.extractDbms(actionDbmList), state);
     }
 
 
@@ -154,10 +148,12 @@ public final class XtaLocalZoneUtils {
         return targetProcDbmMap;
     }
 
-    private static void constructNewZone(List<Loc> orderOfProcesses, List<DBM> changedDbms,
+    private static LocalZoneState constructNewZone(List<Loc> orderOfProcesses, List<DBM> changedDbms,
                                          LocalZoneState state) {
+        var newState = new LocalZoneState(new HashMap<>(state.getLocalDbms()));
         for (var loc : orderOfProcesses)
-            state.setDbmForProc(loc.getProc(), changedDbms.remove(0));
+            newState.setDbmForProc(loc.getProc(), changedDbms.remove(0));
+        return newState;
     }
 
     private static void applyVirtualGuards(final List<Loc> locs, DBM jointDBM, LocalZoneState state) {
@@ -295,8 +291,7 @@ public final class XtaLocalZoneUtils {
 
         applyVirtualGuards(targetLocs, jointDBM, state);
 
-        constructNewZone(targetLocs, preStateBuilder.getDbm().extractDbms(actionDbmList), state);
-        return state;
+        return constructNewZone(targetLocs, preStateBuilder.getDbm().extractDbms(actionDbmList), state);
     }
 
     private static LocalZoneState preForBroadcastAction(final LocalZoneState state,
@@ -338,8 +333,7 @@ public final class XtaLocalZoneUtils {
 
         applyVirtualGuards(targetLocs, jointDBM, state);
 
-        constructNewZone(targetLocs, jointDBM.extractDbms(actionDbmList), state);
-        return state;
+        return constructNewZone(targetLocs, jointDBM.extractDbms(actionDbmList), state);
     }
 
     /// /
