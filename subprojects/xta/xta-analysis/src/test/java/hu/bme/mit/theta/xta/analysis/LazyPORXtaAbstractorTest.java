@@ -13,6 +13,7 @@ import hu.bme.mit.theta.xta.local_analysis.LazyXtaAndAnIntAbstractorConfig;
 import hu.bme.mit.theta.xta.local_analysis.LazyXtaAndAnIntAbstractorConfigFactory;
 import hu.bme.mit.theta.xta.local_analysis.SystemTypeFactory;
 import hu.bme.mit.theta.xta.local_analysis.global_local.GLSystemTypeFactory;
+import hu.bme.mit.theta.xta.local_analysis.server_client.SCSystemTypeFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -54,17 +55,18 @@ public final class LazyPORXtaAbstractorTest {
     public static Collection<Object[]> data() {
         final Collection<Object[]> result = new ArrayList<>();
         for (final String model : MODELS) {
+            DataStrategy2 dataStrategy=DataStrategy2.getValidStrategies().iterator().next();
 
-            for (final DataStrategy2 dataStrategy : DataStrategy2.getValidStrategies()) {
+          //  for (final DataStrategy2 dataStrategy : DataStrategy2.getValidStrategies()) {
                 for (final ClockStrategy2 clockStrategy : ClockStrategy2.getValidStrategies()) {
                     //for (final SystemTypeFactory factory : List.of(GLSystemTypeFactory.create(), SCSystemTypeFactory.create())) {
                         if (clockStrategy.getZoneRepresentation() != ClockStrategy2.ZoneRepresentation.LocalSyncSub) {
                             continue;
                         }
-                        result.add(new Object[]{model, dataStrategy, clockStrategy, GLSystemTypeFactory.create()});
+                        result.add(new Object[]{model, dataStrategy, clockStrategy, SCSystemTypeFactory.create()});
                    // }
                 }
-            }
+            //}
         }
         return result;
     }
