@@ -1,0 +1,21 @@
+const int N = 11;
+typedef int[1, N] id_t;
+broadcast chan g;
+
+process P(const id_t pid) {
+    clock x;
+
+    state A, B;
+
+    init A;
+
+    trans
+        A -> B { guard x>2; },
+        A -> A { sync g?; },
+        B -> A { sync g!; },
+        B -> A { sync g?; },
+        B -> B { assign x = 0; };
+
+}
+
+system P;

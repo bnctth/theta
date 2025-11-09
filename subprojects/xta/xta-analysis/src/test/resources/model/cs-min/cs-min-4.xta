@@ -1,0 +1,42 @@
+// Place global declarations here.
+const int N = 4;
+typedef int[1, N] id_t;
+chan cc[id_t];
+
+process S() {
+clock sc;
+id_t current;
+state
+    L0,
+    L1,
+    L2,
+    L3;
+init
+    L0;
+trans
+    L3 -> L0 { sync cc[current]!; },
+    L2 -> L3 { guard sc>2; },
+    L1 -> L3 { guard sc<2; },
+    L0 -> L3 { assign sc=0; },
+    L0 -> L2 { assign current=current+1; },
+    L0 -> L1 { assign current=current-1; };
+}
+
+process C(const id_t pid) {
+// Place local declarations here.
+clock x;
+state
+    L0,
+    L1,
+    L2,
+    L3;
+init
+    L0;
+trans
+    L3 -> L0 { },
+    L1 -> L3 { },
+    L2 -> L3 { guard x>4; sync cc[pid]?; assign x=0; },
+    L1 -> L2 { },
+    L0 -> L1 { guard x<5; sync cc[pid]?; };
+}
+system S, C;

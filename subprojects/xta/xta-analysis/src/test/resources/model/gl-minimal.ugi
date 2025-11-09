@@ -1,0 +1,17 @@
+process P graphinfo {
+location A (40,80);
+locationName A(-10,-30);
+location B (190,80);
+locationName B(-10,-30);
+trans A B 1 (4,-55);
+guard A B 1 (-13,-80);
+trans A A 1 (-32,39);
+trans A A 1 (-32,-29);
+sync A A 1 (-60,-15);
+trans B A 1 (4,47);
+sync B A 1 (-5,47);
+sync B A 2 (-5,-21);
+trans B B 1 (39,-29);
+trans B B 1 (39,30);
+assign B B 1 (56,-12);
+}

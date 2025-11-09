@@ -15,20 +15,20 @@
  */
 package hu.bme.mit.theta.common;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import java.util.NoSuchElementException;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public abstract class Either<L, R> {
 
 	private Either() {
 	}
 
-	public static <L> Left<L, ?> Left(final L left) {
+	public static <L, R> Left<L, R> Left(final L left) {
 		return new Left<>(left);
 	}
 
-	public static <R> Right<?, R> Right(final R right) {
+	public static <L, R> Right<L, R> Right(final R right) {
 		return new Right<>(right);
 	}
 
