@@ -28,7 +28,6 @@ import hu.bme.mit.theta.solver.z3.Z3SolverFactory;
 import hu.bme.mit.theta.xta.XtaSystem;
 import hu.bme.mit.theta.xta.analysis.*;
 import hu.bme.mit.theta.xta.analysis.expl.XtaExplUtils;
-import hu.bme.mit.theta.xta.analysis.expr.XtaExprActionPost;
 import hu.bme.mit.theta.xta.analysis.expr.XtaExprAnalysis;
 import hu.bme.mit.theta.xta.analysis.lazy.ClockStrategy2;
 import hu.bme.mit.theta.xta.analysis.lazy.DataStrategy2;
@@ -123,7 +122,8 @@ public final class LazyXtaAndAnIntAbstractorConfigFactory {
         }
 
         private Prec createConcrZonePrec() {
-            checkArgument(clockStrategy.getZoneRepresentation() == ClockStrategy2.ZoneRepresentation.LocalSyncSub);
+            checkArgument(clockStrategy.getZoneRepresentation() == ClockStrategy2.ZoneRepresentation.Local ||
+                    clockStrategy.getZoneRepresentation() == ClockStrategy2.ZoneRepresentation.LocalSyncSub);
             return switch (clockStrategy.getClockStrategy()) {
                 case BWITP, FWITP, LU -> LocalZonePrec.of(system.getProcessClockMap());
                 default -> throw new AssertionError();
@@ -170,6 +170,7 @@ public final class LazyXtaAndAnIntAbstractorConfigFactory {
         private Analysis createConcrClockAnalysis() {
             return switch (clockStrategy.getClockStrategy()) {
                 case FWITP, BWITP, LU -> switch (clockStrategy.getZoneRepresentation()) {
+                    case Local -> new XtaLocalAnalysis(LocalZoneOrd.getInstance());
                     case LocalSyncSub -> new XtaLocalAnalysis(LocalZoneSyncSubsumptionOrd.getInstance());
                     default -> throw new AssertionError("Only sync subsumption may be used for lazy POR");
                 };
@@ -305,7 +306,7 @@ public final class LazyXtaAndAnIntAbstractorConfigFactory {
         private LazyStrategy createClockStrategy(final XtaSystem system, final ClockStrategy2 clockStrategy) {
             return switch (clockStrategy.getClockStrategy()) {
                 case BWITP, FWITP -> switch (clockStrategy.getZoneRepresentation()) {
-                    case LocalSyncSub -> createLazyLocalZoneStrategy(system, clockStrategy);
+                    case Local, LocalSyncSub -> createLazyLocalZoneStrategy(system, clockStrategy);
                     default -> throw new AssertionError("Only sync subsumption may be used for this algorithm");
                 };
                 case LU -> {
@@ -330,7 +331,10 @@ public final class LazyXtaAndAnIntAbstractorConfigFactory {
             final Lens<LazyState<XtaAndAnIntState<Prod2State<?, LocalZoneState>>, XtaAndAnIntState<Prod2State<?, LocalZoneState>>>, LazyState<LocalZoneState, LocalZoneState>>
                     lens = LazyXtaLensConverter.of(LazyXtaLensUtils.createLazyClockLens());
             final Lattice<LocalZoneState> lattice = new LocalZoneLattice(partialOrd);
-            final Interpolator<LocalZoneState, LocalZoneState> interpolator = LocalZoneInterpolator.getInstance();
+            final Interpolator<LocalZoneState, LocalZoneState> interpolator = switch (clockStrategy.getZoneRepresentation()) {
+                case LocalSyncSub -> LocalZoneSyncSubsumptionInterpolator.getInstance();
+                default -> LocalZoneInterpolator.getInstance();
+            };
             final Concretizer<LocalZoneState, LocalZoneState> concretizer = BasicConcretizer.create(partialOrd);
             final InvTransFunc<LocalZoneState, XtaAndAnIntAction, LocalZonePrec> zoneInvTransFunc = (LocalZoneState state, XtaAndAnIntAction action, LocalZonePrec prec) -> XtaLocalZoneInvTransFunc.getInstance().getPreStates(state, action.getAction(), prec);
             final LocalZonePrec prec = LocalZonePrec.of(system.getProcessClockMap());

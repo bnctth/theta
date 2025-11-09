@@ -2,6 +2,8 @@ package hu.bme.mit.theta.xta.local_analysis.localzone;
 
 import com.google.common.collect.Lists;
 
+import com.google.common.collect.Streams;
+import hu.bme.mit.theta.common.Tuple2;
 import hu.bme.mit.theta.core.clock.constr.ClockConstrs;
 import hu.bme.mit.theta.analysis.zone.DBM;
 import hu.bme.mit.theta.analysis.zone.ZoneState;
@@ -19,6 +21,7 @@ import hu.bme.mit.theta.xta.analysis.XtaAction.BinaryXtaAction;
 import hu.bme.mit.theta.xta.analysis.XtaAction.BroadcastXtaAction;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static hu.bme.mit.theta.core.clock.constr.ClockConstrs.Eq;
@@ -149,7 +152,7 @@ public final class XtaLocalZoneUtils {
     }
 
     private static LocalZoneState constructNewZone(List<Loc> orderOfProcesses, List<DBM> changedDbms,
-                                         LocalZoneState state) {
+                                                   LocalZoneState state) {
         var newState = new LocalZoneState(new HashMap<>(state.getLocalDbms()));
         for (var loc : orderOfProcesses)
             newState.setDbmForProc(loc.getProc(), changedDbms.remove(0));
@@ -412,6 +415,20 @@ public final class XtaLocalZoneUtils {
                 .toList();
 
         return DBM.global(processDbmPairs, DBM.sync(processDbmPairs));
+    }
+
+    public static LocalZoneState syncedState(final LocalZoneState state) {
+        var dbmMap = state.getLocalDbms().entrySet().stream().toList();
+        var dbms = dbmMap.stream().map(entry -> new DBM.ProcessDbmPair(entry.getKey().getName(), entry.getValue()))
+                .toList();
+
+
+        var syncedDbms = DBM.sync(dbms).extractDbms(dbms).stream();
+        var syncedMap = Streams.zip(dbmMap.stream(), syncedDbms,
+                (pair, newDbm) -> Tuple2.of(pair.getKey(), newDbm)
+        ).collect(Collectors.toMap(Tuple2::get1, Tuple2::get2));
+
+        return new LocalZoneState(syncedMap);
     }
 
 

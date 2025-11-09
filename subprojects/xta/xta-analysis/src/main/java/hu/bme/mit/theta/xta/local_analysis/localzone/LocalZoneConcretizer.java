@@ -4,12 +4,10 @@ import hu.bme.mit.theta.analysis.PartialOrd;
 import hu.bme.mit.theta.analysis.algorithm.lazy.itp.Concretizer;
 
 public final class LocalZoneConcretizer implements Concretizer<LocalZoneState, LocalZoneState> {
-    private final static LocalZoneConcretizer INSTANCE = new LocalZoneConcretizer();
-
     private final PartialOrd<LocalZoneState> ord;
 
-    private LocalZoneConcretizer() {
-        ord = LocalZoneOrd.getInstance();
+    public LocalZoneConcretizer(PartialOrd<LocalZoneState> ord) {
+        this.ord = ord;
     }
 
     @Override

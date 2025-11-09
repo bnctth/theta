@@ -356,7 +356,10 @@ public final class LazyXtaAbstractorConfigFactory {
             final Lens<LazyState<XtaState<Prod2State<?, LocalZoneState>>, XtaState<Prod2State<?, LocalZoneState>>>, LazyState<LocalZoneState, LocalZoneState>>
                     lens = LazyXtaLensUtils.createLazyClockLens();
             final Lattice<LocalZoneState> lattice = new LocalZoneLattice(partialOrd);
-            final Interpolator<LocalZoneState, LocalZoneState> interpolator = LocalZoneInterpolator.getInstance();
+            final Interpolator<LocalZoneState, LocalZoneState> interpolator = switch (clockStrategy.getZoneRepresentation()){
+                case LocalSyncSub -> LocalZoneSyncSubsumptionInterpolator.getInstance();
+                default -> LocalZoneInterpolator.getInstance();
+            };
             final Concretizer<LocalZoneState, LocalZoneState> concretizer = BasicConcretizer.create(partialOrd);
             final InvTransFunc<LocalZoneState, XtaAction, LocalZonePrec> zoneInvTransFunc = XtaLocalZoneInvTransFunc.getInstance();
             final LocalZonePrec prec = LocalZonePrec.of(system.getProcessClockMap());
