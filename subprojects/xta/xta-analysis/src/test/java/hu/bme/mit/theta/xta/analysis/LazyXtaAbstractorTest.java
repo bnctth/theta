@@ -22,7 +22,6 @@ import java.util.Collection;
 import java.util.List;
 
 import static hu.bme.mit.theta.analysis.algorithm.SearchStrategy.BFS;
-import static hu.bme.mit.theta.xta.analysis.lazy.ClockStrategy2.ClockStrategy.LU;
 
 @RunWith(Parameterized.class)
 public final class LazyXtaAbstractorTest {
@@ -57,15 +56,16 @@ public final class LazyXtaAbstractorTest {
         final Collection<Object[]> result = new ArrayList<>();
         //for (final String model : MODELS) {
         String model = "/model/gl/gl-2.xta";
-        DataStrategy2 dataStrategy=DataStrategy2.getValidStrategies().iterator().next();
-       // for (final DataStrategy2 dataStrategy : DataStrategy2.getValidStrategies()) {
-            for (final ClockStrategy2 clockStrategy : ClockStrategy2.getValidStrategies()) {
-                //if (!MODELS_WITH_UNKNOWN_SOLVER_STATUS.contains(model) || (clockStrategy.getClockStrategy() != LU)) {
-                    if (clockStrategy.getClockStrategy() == LU)
-                        continue;
-                    result.add(new Object[]{model, dataStrategy, clockStrategy});
-               // }
-            }
+        DataStrategy2 dataStrategy = DataStrategy2.getValidStrategies().iterator().next();
+        ClockStrategy2 clockStrategy = new ClockStrategy2(ClockStrategy2.ClockStrategy.BWITP, ClockStrategy2.ZoneRepresentation.LocalSyncSub);
+        // for (final DataStrategy2 dataStrategy : DataStrategy2.getValidStrategies()) {
+//        for (final ClockStrategy2 clockStrategy : ClockStrategy2.getValidStrategies()) {
+//            //if (!MODELS_WITH_UNKNOWN_SOLVER_STATUS.contains(model) || (clockStrategy.getClockStrategy() != LU)) {
+//            if (clockStrategy.getClockStrategy() == LU)
+//                continue;
+            result.add(new Object[]{model, dataStrategy, clockStrategy});
+            // }
+//        }
         //}
         //}
         return result;

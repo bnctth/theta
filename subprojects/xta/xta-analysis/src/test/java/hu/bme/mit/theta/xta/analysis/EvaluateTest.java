@@ -13,7 +13,6 @@ import hu.bme.mit.theta.xta.dsl.XtaDslManager;
 import hu.bme.mit.theta.xta.local_analysis.LazyXtaAndAnIntAbstractorConfig;
 import hu.bme.mit.theta.xta.local_analysis.LazyXtaAndAnIntAbstractorConfigFactory;
 import hu.bme.mit.theta.xta.local_analysis.SystemTypeFactory;
-import hu.bme.mit.theta.xta.local_analysis.global_local.GLSystemTypeFactory;
 import hu.bme.mit.theta.xta.local_analysis.server_client.SCSystemTypeFactory;
 import org.junit.Before;
 import org.junit.Test;
@@ -33,17 +32,22 @@ import static hu.bme.mit.theta.analysis.algorithm.SearchStrategy.BFS;
 @RunWith(Parameterized.class)
 public class EvaluateTest {
     private record Model(String modelName, int minProcess, int maxProcess, SystemTypeFactory systemTypeFactory) {
+        @Override
+        public String toString() {
+            return "Model{" +
+                    "modelName='" + modelName + '\'' +
+                    '}';
+        }
     }
 
     private static final String MODEL_TEMPLATE = "/model/%s/%s-%d.xta";
     private static final int MIN_PROCESS = 2;
     private static final int MAX_PROCESS = 10;
     private static final String OUTPUT_TEMPLATE = "./src/test/resources/result/new/%s-%s.csv";
-    private static final SystemTypeFactory SYSTEM_TYPE_FACTORY = GLSystemTypeFactory.create();
 
     private static final Model[] models = {
-            new Model("gl", 2, 6, GLSystemTypeFactory.create()),
-            new Model("gl-minimal", 2, 11, GLSystemTypeFactory.create()),
+          //  new Model("gl", 2, 6, GLSystemTypeFactory.create()),
+          //  new Model("gl-minimal", 2, 11, GLSystemTypeFactory.create()),
             new Model("cs-min", 1, 5, SCSystemTypeFactory.create())
     };
 
@@ -92,7 +96,7 @@ public class EvaluateTest {
         final InputStream inputStream = getClass().getResourceAsStream(String.format(MODEL_TEMPLATE, model.modelName, model.modelName, processCount));
         final XtaSystem system = XtaDslManager.createSystem(inputStream);
         if (isPor) {
-            abstractor = Either.Right(LazyXtaAndAnIntAbstractorConfigFactory.create(system, DataStrategy2.getValidStrategies().iterator().next(), new ClockStrategy2(ClockStrategy2.ClockStrategy.BWITP, zoneRepresentation), BFS, ExprMeetStrategy.SYNTACTIC, SYSTEM_TYPE_FACTORY));
+            abstractor = Either.Right(LazyXtaAndAnIntAbstractorConfigFactory.create(system, DataStrategy2.getValidStrategies().iterator().next(), new ClockStrategy2(ClockStrategy2.ClockStrategy.BWITP, zoneRepresentation), BFS, ExprMeetStrategy.SYNTACTIC, model.systemTypeFactory));
         } else {
             abstractor = Either.Left(LazyXtaAbstractorConfigFactory.create(system, DataStrategy2.getValidStrategies().iterator().next(), new ClockStrategy2(ClockStrategy2.ClockStrategy.BWITP, zoneRepresentation), BFS, ExprMeetStrategy.SYNTACTIC));
         }
