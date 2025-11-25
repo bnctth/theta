@@ -15,45 +15,25 @@
  */
 package hu.bme.mit.theta.analysis.zone;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
-import static hu.bme.mit.theta.analysis.zone.DiffBounds.Inf;
-import static hu.bme.mit.theta.analysis.zone.DiffBounds.Leq;
-import static hu.bme.mit.theta.analysis.zone.DiffBounds.Lt;
-import static hu.bme.mit.theta.analysis.zone.DiffBounds.add;
-import static hu.bme.mit.theta.analysis.zone.DiffBounds.asString;
-import static hu.bme.mit.theta.analysis.zone.DiffBounds.negate;
-import static java.lang.Math.max;
-import static java.lang.Math.min;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-
-import com.google.common.collect.Streams;
+import com.google.common.collect.Iterators;
+import com.google.common.collect.Sets;
 import hu.bme.mit.theta.common.container.Containers;
+import hu.bme.mit.theta.core.clock.constr.*;
+import hu.bme.mit.theta.core.clock.op.*;
+import hu.bme.mit.theta.core.decl.VarDecl;
+import hu.bme.mit.theta.core.type.rattype.RatType;
 
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.IntBinaryOperator;
 import java.util.function.IntConsumer;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Sets;
-
-import hu.bme.mit.theta.core.clock.constr.*;
-import hu.bme.mit.theta.core.clock.op.ClockOp;
-import hu.bme.mit.theta.core.clock.op.ClockOpVisitor;
-import hu.bme.mit.theta.core.clock.op.CopyOp;
-import hu.bme.mit.theta.core.clock.op.FreeOp;
-import hu.bme.mit.theta.core.clock.op.GuardOp;
-import hu.bme.mit.theta.core.clock.op.ResetOp;
-import hu.bme.mit.theta.core.clock.op.ShiftOp;
-import hu.bme.mit.theta.core.decl.VarDecl;
-import hu.bme.mit.theta.core.type.rattype.RatType;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static hu.bme.mit.theta.analysis.zone.DiffBounds.*;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 public final class DBM {
 
@@ -64,7 +44,7 @@ public final class DBM {
     private static final IntBinaryOperator TOP_DBM_VALUES = BasicDbm::defaultBound;
     private static final IntBinaryOperator BOTTOM_DBM_VALUES = (x, y) -> Leq(-1);
 
-    private final DbmSignature signature;
+    public final DbmSignature signature; //TODO make this private, only public for debugging purposes
     private final BasicDbm dbm;
 
     private DBM(final DbmSignature signature, final IntBinaryOperator values) {
@@ -187,6 +167,34 @@ public final class DBM {
         }).toList();
 
         return DBM.project(syncedDBM, variables);
+    }
+
+    /**
+     * If the DBM has a refclock, it gets put at the end, otherwise a default bounded one is added.
+     * <p>
+     * To be used in {@link hu.bme.mit.theta.xta.local_analysis.localzone.LocalZoneState} constructors.
+     *
+     * @param current DBM to be transformed
+     * @param oldDbm  A well-formed local {@link DBM}, meaning its
+     * @return new well-formed local DBM
+     */
+    public static DBM forceRefClock(DBM current, DBM oldDbm) {
+        var oldRefClock = Iterators.getLast(oldDbm.signature.iterator());
+        assert oldRefClock.getName().startsWith("LocalRefClock_");
+        if (current.signature.contains(oldRefClock)) {
+            var index = current.signature.indexOf(oldRefClock);
+            if (index == current.signature.size() - 1) {
+                return current;
+            }
+            var varDeclList = current.signature.toList().stream()
+                    .filter(vd -> vd != oldRefClock)
+                    .collect(Collectors.toCollection(ArrayList::new));
+            varDeclList.add(oldRefClock);
+            return DBM.project(current, varDeclList);
+        }
+        var varDeclList = new ArrayList<>(current.signature.toList());
+        varDeclList.add(oldRefClock);
+        return DBM.project(current, varDeclList);
     }
 
     public List<DBM> extractDbms(List<ProcessDbmPair> originalDbms) {

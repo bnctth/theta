@@ -40,7 +40,7 @@ public final class XtaLocalZoneUtils {
         if (action.isBasic()) {
             return postForBasicAction(state, action.asBasic(), prec);
         } else if (action.isBinary()) {
-            return postForBinaryAction(state, action.asBinary(), prec);
+            return postForBinaryAction(state, action.asBinary());
         } else if (action.isBroadcast()) {
             return postForBroadcastAction(state, action.asBroadcast(), prec);
         } else {
@@ -66,13 +66,11 @@ public final class XtaLocalZoneUtils {
             applyDelay(succStateBuilder, involvedLocs);
         }
 
-        final LocalZoneState succState = succStateBuilder.build();
-        return succState;
+        return succStateBuilder.build();
     }
 
     private static LocalZoneState postForBinaryAction(final LocalZoneState state,
-                                                      final BinaryXtaAction action,
-                                                      final LocalZonePrec prec) {
+                                                      final BinaryXtaAction action) {
         final List<Loc> sourceLocs = action.getSourceLocs();
         final Edge emittingEdge = action.getEmitEdge();
         final Edge receivingEdge = action.getRecvEdge();
@@ -133,7 +131,7 @@ public final class XtaLocalZoneUtils {
         if (shouldApplyDelay(action.getTargetLocs())) {
             applySyncDelay(succStateBuilder);
         }
-        return constructNewZone(targetLocs, jointDBM.extractDbms(actionDbmList), state);
+        return constructNewZone(targetLocs, succStateBuilder.getDbm().extractDbms(actionDbmList), state);
     }
 
 
@@ -265,8 +263,7 @@ public final class XtaLocalZoneUtils {
         applyGuards(preStateBuilder, edge);
         applyInvariants(preStateBuilder, sourceLocs);
 
-        final LocalZoneState preState = preStateBuilder.build();
-        return preState;
+        return preStateBuilder.build();
     }
 
     private static LocalZoneState preForBinaryAction(final LocalZoneState state, final BinaryXtaAction action,
@@ -333,6 +330,8 @@ public final class XtaLocalZoneUtils {
 
         applySyncGuards(preStateBuilder, emitEdge);
         applySyncInvariants(preStateBuilder, sourceLocs);
+
+        jointDBM = preStateBuilder.getDbm();
 
         applyVirtualGuards(targetLocs, jointDBM, state);
 

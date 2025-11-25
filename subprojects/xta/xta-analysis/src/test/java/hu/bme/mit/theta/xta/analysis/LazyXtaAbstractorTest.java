@@ -22,6 +22,8 @@ import java.util.Collection;
 import java.util.List;
 
 import static hu.bme.mit.theta.analysis.algorithm.SearchStrategy.BFS;
+import static hu.bme.mit.theta.xta.analysis.lazy.ClockStrategy2.ClockStrategy.BWITP;
+import static hu.bme.mit.theta.xta.analysis.lazy.ClockStrategy2.ClockStrategy.LU;
 
 @RunWith(Parameterized.class)
 public final class LazyXtaAbstractorTest {
@@ -31,9 +33,10 @@ public final class LazyXtaAbstractorTest {
     private static final String MODEL_LYNCH = "/model/lynch-2-16.xta";
     private static final String MODEL_ENGINE = "/model/engine-classic.xta";
     private static final String MODEL_BROADCAST = "/model/broadcast.xta";
+    private static final String MODEL_GL = "/model/gl.xta";
 
     private static final Collection<String> MODELS = List.of(MODEL_CSMA, MODEL_FDDI, MODEL_FISCHER,
-            MODEL_LYNCH/*, MODEL_ENGINE, MODEL_BROADCAST*/);
+            MODEL_LYNCH, MODEL_GL/*, MODEL_ENGINE, MODEL_BROADCAST*/);
 
     private static final Collection<String> MODELS_WITH_UNKNOWN_SOLVER_STATUS = ImmutableSet.of(MODEL_CSMA, MODEL_FDDI,
             MODEL_ENGINE, MODEL_BROADCAST);
@@ -56,17 +59,17 @@ public final class LazyXtaAbstractorTest {
         final Collection<Object[]> result = new ArrayList<>();
         //for (final String model : MODELS) {
         String model = "/model/gl/gl-2.xta";
-        DataStrategy2 dataStrategy = DataStrategy2.getValidStrategies().iterator().next();
-        ClockStrategy2 clockStrategy = new ClockStrategy2(ClockStrategy2.ClockStrategy.BWITP, ClockStrategy2.ZoneRepresentation.LocalSyncSub);
-        // for (final DataStrategy2 dataStrategy : DataStrategy2.getValidStrategies()) {
-//        for (final ClockStrategy2 clockStrategy : ClockStrategy2.getValidStrategies()) {
-//            //if (!MODELS_WITH_UNKNOWN_SOLVER_STATUS.contains(model) || (clockStrategy.getClockStrategy() != LU)) {
-//            if (clockStrategy.getClockStrategy() == LU)
-//                continue;
-            result.add(new Object[]{model, dataStrategy, clockStrategy});
-            // }
-//        }
-        //}
+        //  DataStrategy2 dataStrategy = DataStrategy2.getValidStrategies().iterator().next();
+        // ClockStrategy2 clockStrategy = new ClockStrategy2(ClockStrategy2.ClockStrategy.BWITP, ClockStrategy2.ZoneRepresentation.LocalSyncSub);
+        for (final DataStrategy2 dataStrategy : DataStrategy2.getValidStrategies()) {
+            for (final ClockStrategy2 clockStrategy : ClockStrategy2.getValidStrategies()) {
+                if (!MODELS_WITH_UNKNOWN_SOLVER_STATUS.contains(model) || (clockStrategy.getClockStrategy() != LU)) {
+                    if (clockStrategy.getClockStrategy() != BWITP)
+                        continue;
+                    result.add(new Object[]{model, dataStrategy, clockStrategy});
+                }
+            }
+        }
         //}
         return result;
     }

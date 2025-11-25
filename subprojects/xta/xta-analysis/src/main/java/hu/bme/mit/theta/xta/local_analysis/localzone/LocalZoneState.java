@@ -16,18 +16,11 @@
 
 package hu.bme.mit.theta.xta.local_analysis.localzone;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import java.util.*;
-import java.util.stream.Collectors;
-
-
+import com.google.common.collect.Iterables;
 import hu.bme.mit.theta.analysis.expr.ExprState;
 import hu.bme.mit.theta.analysis.zone.BoundFunc;
 import hu.bme.mit.theta.analysis.zone.DBM;
 import hu.bme.mit.theta.analysis.zone.DbmRelation;
-import hu.bme.mit.theta.analysis.zone.ZoneState;
-import hu.bme.mit.theta.common.Tuple;
 import hu.bme.mit.theta.common.Tuple2;
 import hu.bme.mit.theta.common.Utils;
 import hu.bme.mit.theta.common.container.Containers;
@@ -40,13 +33,18 @@ import hu.bme.mit.theta.core.type.booltype.BoolType;
 import hu.bme.mit.theta.core.type.rattype.RatType;
 import hu.bme.mit.theta.xta.XtaProcess;
 import hu.bme.mit.theta.xta.XtaSystem;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 import static hu.bme.mit.theta.core.type.booltype.SmartBoolExprs.And;
 import static java.util.stream.Collectors.toList;
 
 public class LocalZoneState implements ExprState {
 
     private interface DbmCalcInterface {
-         DBM dbmCalc(final DBM lhs, final DBM rhs);
+        DBM dbmCalc(final DBM lhs, final DBM rhs);
     }
 
     private static final int HASH_SEED = 4349;
@@ -54,34 +52,42 @@ public class LocalZoneState implements ExprState {
     private volatile int hashCode = 0;
     private volatile Expr<BoolType> expr = null;
 
-    private  Map<XtaProcess, DBM> localDBMs = Containers.createMap();
+    private Map<XtaProcess, DBM> localDBMs = Containers.createMap();
 
     // DO NOT use this, this is only used in derived classes
-    protected LocalZoneState() {}
+    protected LocalZoneState() {
+    }
 
     // Protected so that children classes can call the parent ctr
     protected LocalZoneState(final XtaSystem system) {
-        for (var mapping : system.getProcessClockMap().entrySet()){
+        for (var mapping : system.getProcessClockMap().entrySet()) {
             XtaProcess process = mapping.getKey();
             Collection<VarDecl<RatType>> localSignature = mapping.getValue();
             //localSignature.add(Decls.Var("LocalRefClock_" + process.getName(),  RatType.getInstance()));
             localDBMs.put(process, DBM.zero(localSignature));
+            assert this instanceof LocalZoneStateTop || this instanceof LocalZoneStateBottom || Iterables.getLast(localSignature).getName().startsWith("LocalRefClock");
         }
     }
 
     protected LocalZoneState(final Builder builder) {
         this.localDBMs = builder.localDBMs;
+        for (var dbm : this.localDBMs.values()) {
+            assert this instanceof LocalZoneStateTop || this instanceof LocalZoneStateBottom || Iterables.getLast(dbm.signature).getName().startsWith("LocalRefClock");
+        }
     }
 
     protected LocalZoneState(final Map<XtaProcess, DBM> inputMap) {
         localDBMs = inputMap;
+        for (var dbm : this.localDBMs.values()) {
+            assert this instanceof LocalZoneStateTop || this instanceof LocalZoneStateBottom || Iterables.getLast(dbm.signature).getName().startsWith("LocalRefClock");
+        }
     }
 
     public Optional<DBM> getDbmForProcess(XtaProcess proc) {
-        for (var mapping : this.localDBMs.entrySet()){
-            if (mapping.getKey().equals(proc)){
-                    DBM find = mapping.getValue();
-                    return Optional.ofNullable(find);
+        for (var mapping : this.localDBMs.entrySet()) {
+            if (mapping.getKey().equals(proc)) {
+                DBM find = mapping.getValue();
+                return Optional.ofNullable(find);
             }
         }
         return Optional.empty();
@@ -96,15 +102,15 @@ public class LocalZoneState implements ExprState {
     }
 
     private static Map<XtaProcess, DBM> twoOperandLocalZoneCalc(
-        final LocalZoneState zone1,
-        final LocalZoneState zone2,
-        DbmCalcInterface lambda
+            final LocalZoneState zone1,
+            final LocalZoneState zone2,
+            DbmCalcInterface lambda
     ) {
         checkNotNull(zone1);
         checkNotNull(zone2);
 
         Map<XtaProcess, DBM> toReturn = Containers.createMap();
-        for(var zone1Map : zone1.localDBMs.entrySet()){
+        for (var zone1Map : zone1.localDBMs.entrySet()) {
             // The key stores the process
             DBM zone2Dbm = zone2.localDBMs.get(zone1Map.getKey());
 
@@ -124,6 +130,7 @@ public class LocalZoneState implements ExprState {
         for (var pair : localDBMs.entrySet()) {
             for (var complementDBM : pair.getValue().complement()) {
                 var copyMap = new HashMap<>(topMap);
+                complementDBM = DBM.forceRefClock(complementDBM, pair.getValue());
                 copyMap.put(pair.getKey(), complementDBM);
                 results.add(new LocalZoneState(copyMap));
             }
@@ -133,10 +140,10 @@ public class LocalZoneState implements ExprState {
 
     public static LocalZoneState zero(final Map<XtaProcess, Collection<VarDecl<RatType>>> clocksProcessMap, boolean addLocalRef) {
         Map<XtaProcess, DBM> tmp = Containers.createMap();
-        for (var mapping : clocksProcessMap.entrySet()){
+        for (var mapping : clocksProcessMap.entrySet()) {
             Collection<VarDecl<RatType>> localSignature = mapping.getValue();
             if (addLocalRef)
-                localSignature.add(Decls.Var("LocalRefClock_" + mapping.getKey().getName(),  RatType.getInstance()));
+                localSignature.add(Decls.Var("LocalRefClock_" + mapping.getKey().getName(), RatType.getInstance()));
             tmp.put(mapping.getKey(), DBM.zero(localSignature));
         }
 
@@ -151,10 +158,13 @@ public class LocalZoneState implements ExprState {
         //  it would be wasteful to always call the more costly semantic checks
         if (zone1 instanceof LocalZoneStateTop) return zone2;
         if (zone2 instanceof LocalZoneStateTop) return zone1;
-        if (zone1 instanceof LocalZoneStateBottom || zone2 instanceof LocalZoneStateBottom) return LocalZoneStateBottom.getInstance();
+        if (zone1 instanceof LocalZoneStateBottom || zone2 instanceof LocalZoneStateBottom)
+            return LocalZoneStateBottom.getInstance();
         // This may add an unnecessary function call to the mix, but it saves lots of coding lines, later it would be
         // good to check the technical options
-        return new LocalZoneState(twoOperandLocalZoneCalc(zone1, zone2, (z1, z2) -> {return DBM.intersection(z1, z2);}));
+        return new LocalZoneState(twoOperandLocalZoneCalc(zone1, zone2, (z1, z2) -> {
+            return DBM.intersection(z1, z2);
+        }));
     }
 
     public static LocalZoneState enclosure(final LocalZoneState zone1, final LocalZoneState zone2) {
@@ -163,10 +173,11 @@ public class LocalZoneState implements ExprState {
         // instanceof is used instead of the semantic isTop and isBottom checks because semantic-top and semantic-bottom
         //  represented by a full-fledged local zone with local DBMs can be handled by the generic part, so
         //  it would be wasteful to always call the more costly semantic checks
-        if (zone1 instanceof LocalZoneStateTop || zone2 instanceof LocalZoneStateTop) return LocalZoneStateTop.getInstance();
+        if (zone1 instanceof LocalZoneStateTop || zone2 instanceof LocalZoneStateTop)
+            return LocalZoneStateTop.getInstance();
         if (zone1 instanceof LocalZoneStateBottom) return zone2;
         if (zone2 instanceof LocalZoneStateBottom) return zone1;
-        return new LocalZoneState(twoOperandLocalZoneCalc(zone1, zone2, (z1, z2) -> {return DBM.enclosure(z1, z2);}));
+        return new LocalZoneState(twoOperandLocalZoneCalc(zone1, zone2, DBM::enclosure));
     }
 
     public static LocalZoneState interpolant(final LocalZoneState zone1, final LocalZoneState zone2) {
@@ -181,7 +192,7 @@ public class LocalZoneState implements ExprState {
                                 DBM.project(
                                         DBM.interpolant(pairs1.get(process), pairs2.get(process)),
                                         pairs1.get(process)
-                                        )
+                                )
                         );
                     }
                     return Tuple2.of(pair.getKey(), DBM.topOf(pair.getValue()));
@@ -194,7 +205,9 @@ public class LocalZoneState implements ExprState {
     }
 
     public static LocalZoneState weakInterpolant(final LocalZoneState zone1, final LocalZoneState zone2) {
-        return new LocalZoneState(twoOperandLocalZoneCalc(zone1, zone2, (z1, z2) -> {return DBM.weakInterpolant(z1, z2);}));
+        return new LocalZoneState(twoOperandLocalZoneCalc(zone1, zone2, (z1, z2) -> {
+            return DBM.weakInterpolant(z1, z2);
+        }));
     }
 
 
@@ -203,7 +216,7 @@ public class LocalZoneState implements ExprState {
         Expr<BoolType> result = expr;
         if (result == null) {
             Collection<Expr<BoolType>> exprs = Containers.createSet();
-            for(var mapping : this.localDBMs.entrySet()){
+            for (var mapping : this.localDBMs.entrySet()) {
                 exprs.addAll(mapping.getValue().getConstrs().stream().map(ClockConstr::toExpr).collect(toList()));
             }
             result = And(exprs);
@@ -229,12 +242,12 @@ public class LocalZoneState implements ExprState {
             return true;
         } else if (obj != null && this.getClass() == obj.getClass()) {
             final LocalZoneState that = (LocalZoneState) obj;
-            for(var mapping : this.localDBMs.entrySet()){
+            for (var mapping : this.localDBMs.entrySet()) {
                 DBM thatProcessDbm = that.getDbmForProcess(mapping.getKey()).get();
                 DBM thisProcessDmb = mapping.getValue();
                 checkNotNull(thisProcessDmb);
 
-                if(!thisProcessDmb.equals(thatProcessDbm))
+                if (!thisProcessDmb.equals(thatProcessDbm))
                     return false;
             }
         } else {
@@ -246,7 +259,7 @@ public class LocalZoneState implements ExprState {
     @Override
     public String toString() {
         Collection<ClockConstr> constrs = Containers.createSet();
-        for(var dbm : this.localDBMs.values()){
+        for (var dbm : this.localDBMs.values()) {
             constrs.addAll(dbm.getConstrs());
         }
         return Utils.lispStringBuilder(getClass().getSimpleName()).aligned().addAll(constrs)
@@ -273,8 +286,8 @@ public class LocalZoneState implements ExprState {
     }
 
     public boolean isTop() {
-        for(var dbm : this.localDBMs.values()){
-            if (!(DBM.top(Collections.emptySet()).getRelation(dbm) == DbmRelation.EQUAL)){
+        for (var dbm : this.localDBMs.values()) {
+            if (!(DBM.top(Collections.emptySet()).getRelation(dbm) == DbmRelation.EQUAL)) {
                 return false;
             }
         }
@@ -284,8 +297,8 @@ public class LocalZoneState implements ExprState {
 
     @Override
     public boolean isBottom() {
-        for(var dbm : this.localDBMs.values()){
-            if (!dbm.isConsistent()){
+        for (var dbm : this.localDBMs.values()) {
+            if (!dbm.isConsistent()) {
                 return true;
             }
         }
@@ -294,12 +307,12 @@ public class LocalZoneState implements ExprState {
     }
 
     public boolean isLeq(final LocalZoneState that) {
-        for(var mapping : this.localDBMs.entrySet()){
+        for (var mapping : this.localDBMs.entrySet()) {
             DBM thatProcessDbm = that.getDbmForProcess(mapping.getKey()).get();
             DBM thisProcessDmb = mapping.getValue();
             checkNotNull(thisProcessDmb);
 
-            if(!thisProcessDmb.isLeq(thatProcessDbm))
+            if (!thisProcessDmb.isLeq(thatProcessDbm))
                 return false;
         }
 
@@ -309,20 +322,20 @@ public class LocalZoneState implements ExprState {
     public boolean isLeq(final LocalZoneState that,
                          final Map<XtaProcess, Collection<? extends VarDecl<RatType>>> activeVars) {
 
-        for (var varsMapping : activeVars.entrySet()){
-            if(!this.getDbmForProcess(varsMapping.getKey()).get().isLeq(that.getDbmForProcess(varsMapping.getKey()).get(), varsMapping.getValue()))
+        for (var varsMapping : activeVars.entrySet()) {
+            if (!this.getDbmForProcess(varsMapping.getKey()).get().isLeq(that.getDbmForProcess(varsMapping.getKey()).get(), varsMapping.getValue()))
                 return false;
         }
         return true;
     }
 
     public boolean isLeq(final LocalZoneState that, final BoundFunc boundFunction) {
-        for(var mapping : this.localDBMs.entrySet()){
+        for (var mapping : this.localDBMs.entrySet()) {
             DBM thatProcessDbm = that.getDbmForProcess(mapping.getKey()).get();
             DBM thisProcessDmb = mapping.getValue();
             checkNotNull(thisProcessDmb);
 
-            if(!thisProcessDmb.isLeq(thatProcessDbm, boundFunction))
+            if (!thisProcessDmb.isLeq(thatProcessDbm, boundFunction))
                 return false;
         }
 
@@ -330,34 +343,35 @@ public class LocalZoneState implements ExprState {
     }
 
     public boolean isConsistentWith(final LocalZoneState that) {
-        for(var mapping : this.localDBMs.entrySet()){
+        for (var mapping : this.localDBMs.entrySet()) {
             DBM thatProcessDbm = that.getDbmForProcess(mapping.getKey()).get();
             DBM thisProcessDmb = mapping.getValue();
             checkNotNull(thisProcessDmb);
 
-            if(!thisProcessDmb.isConsistentWith(thatProcessDbm))
+            if (!thisProcessDmb.isConsistentWith(thatProcessDbm))
                 return false;
         }
 
         return true;
     }
-    ////////
+
+    /// /////
     // Since Java lambdas suck and there is no nice overload this is going to be a whole lot of code repetition
 
     public static class Builder {
 
-        private  Map<XtaProcess, DBM> localDBMs = Containers.createMap();
+        private Map<XtaProcess, DBM> localDBMs = Containers.createMap();
 
         private Builder(final Map<XtaProcess, DBM> localDBMs) {
             this.localDBMs = localDBMs;
         }
 
-        ////
+        /// /
 
         private static Builder transform(final LocalZoneState state) {
             Map<XtaProcess, DBM> tmp = Containers.createMap();
 
-            for(var mapping : state.localDBMs.entrySet()){
+            for (var mapping : state.localDBMs.entrySet()) {
                 tmp.put(XtaProcess.copyOf(mapping.getKey()), DBM.copyOf(mapping.getValue()));
             }
             return new Builder(tmp);
@@ -366,19 +380,19 @@ public class LocalZoneState implements ExprState {
         private static Builder project(final LocalZoneState state,
                                        final Map<XtaProcess, Collection<VarDecl<RatType>>> clocksProcessMap) {
             Map<XtaProcess, DBM> tmp = Containers.createMap();
-            for( var varDeclMaps : clocksProcessMap.entrySet() ){
-                tmp.put(varDeclMaps.getKey(), DBM.project(state.getDbmForProcess(varDeclMaps.getKey()).get(), varDeclMaps.getValue()) );
+            for (var varDeclMaps : clocksProcessMap.entrySet()) {
+                tmp.put(varDeclMaps.getKey(), DBM.project(state.getDbmForProcess(varDeclMaps.getKey()).get(), varDeclMaps.getValue()));
             }
             return new Builder(tmp);
         }
 
-        ////
+        /// /
 
         public LocalZoneState build() {
             return new LocalZoneState(this);
         }
 
-        ////
+        /// /
 
         public Builder localUp(final XtaProcess proc) {
             this.localDBMs.get(proc).up();
@@ -391,68 +405,68 @@ public class LocalZoneState implements ExprState {
         }
 
         public Builder up() {
-            for(var dbm : this.localDBMs.values())
+            for (var dbm : this.localDBMs.values())
                 dbm.up();
             return this;
         }
 
         public Builder down() {
-            for(var dbm : this.localDBMs.values())
+            for (var dbm : this.localDBMs.values())
                 dbm.down();
             return this;
         }
 
         public Builder nonnegative() {
-            for(var dbm : this.localDBMs.values())
+            for (var dbm : this.localDBMs.values())
                 dbm.nonnegative();
             return this;
         }
 
         //TODO ask about this lil guy
         public Builder execute(final ClockOp op) {
-            for(var dbm : this.localDBMs.values())
+            for (var dbm : this.localDBMs.values())
                 dbm.execute(op);
             return this;
         }
 
         //TODO the input of this may be wrong
         public Builder and(final ClockConstr constr) {
-            for(var dbm : this.localDBMs.values())
+            for (var dbm : this.localDBMs.values())
                 dbm.and(constr);
             return this;
         }
 
         //TODO the input of this may be wrong
         public Builder free(final VarDecl<RatType> varDecl) {
-            for(var dbm : this.localDBMs.values())
+            for (var dbm : this.localDBMs.values())
                 dbm.free(varDecl);
             return this;
         }
 
         //TODO the input of this may be wrong
         public Builder reset(final VarDecl<RatType> varDecl, final int m) {
-            for(var dbm : this.localDBMs.values())
+            for (var dbm : this.localDBMs.values())
                 dbm.reset(varDecl, m);
             return this;
         }
 
         //TODO the input of this still may be wron
         public Builder copy(final VarDecl<RatType> lhs, final VarDecl<RatType> rhs) {
-            for(var dbm : this.localDBMs.values())
+            for (var dbm : this.localDBMs.values())
                 dbm.copy(lhs, rhs);
             return this;
         }
 
         //TODO the input of this may be wrong
         public Builder shift(final VarDecl<RatType> varDecl, final int m) {
-            for(var dbm : this.localDBMs.values())
+            for (var dbm : this.localDBMs.values())
                 dbm.shift(varDecl, m);
             return this;
         }
 
         //TODO the input of this may be wrong
         public Builder norm(final Map<? extends VarDecl<RatType>, ? extends Integer> ceilings) {
-            for(var dbm : this.localDBMs.values())
+            for (var dbm : this.localDBMs.values())
                 dbm.norm(ceilings);
             return this;
         }
