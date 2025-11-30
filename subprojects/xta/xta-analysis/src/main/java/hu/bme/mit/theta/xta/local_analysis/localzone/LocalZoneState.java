@@ -472,5 +472,8 @@ public class LocalZoneState implements ExprState {
         }
     }
 
+    List<DBM> getDbmList(){
+        return List.copyOf(localDBMs.values());
+    }
 
 }

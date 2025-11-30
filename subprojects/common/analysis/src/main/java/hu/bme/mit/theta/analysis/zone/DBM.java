@@ -36,10 +36,6 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 public final class DBM {
-
-    public record ProcessDbmPair(String processName, DBM processDbm) {
-    }
-
     private static final IntBinaryOperator ZERO_DBM_VALUES = (x, y) -> Leq(0);
     private static final IntBinaryOperator TOP_DBM_VALUES = BasicDbm::defaultBound;
     private static final IntBinaryOperator BOTTOM_DBM_VALUES = (x, y) -> Leq(-1);
@@ -83,11 +79,11 @@ public final class DBM {
         return signature.getVar(signature.size() - 1);
     }
 
-    public static DBM joinDbms(List<ProcessDbmPair> dbmsToJoin) {
+    public static DBM joinDbms(List<DBM> dbmsToJoin) {
         List<VarDecl<RatType>> joinedList = new ArrayList<>();
 
-        for (var mapping : dbmsToJoin) {
-            List<VarDecl<RatType>> varDeclList = new ArrayList<>(mapping.processDbm().signature.toList());
+        for (var dbm : dbmsToJoin) {
+            List<VarDecl<RatType>> varDeclList = new ArrayList<>(dbm.signature.toList());
             // Removing the zero clock, this is true only for the dbm copy, the original dbm is not modified
             varDeclList.remove(0);
 
@@ -96,8 +92,7 @@ public final class DBM {
 
         DBM joinedDbm = new DBM(DbmSignature.over(Collections.unmodifiableList(joinedList)), TOP_DBM_VALUES);
         Integer offset = 0;
-        for (var pair : dbmsToJoin) {
-            DBM currentDbm = pair.processDbm();
+        for (var currentDbm : dbmsToJoin) {
             int size = currentDbm.dbm.size();
 
             // Leaving the zero clock out and filling the clock constraints
@@ -129,15 +124,15 @@ public final class DBM {
     /**
      * Joins all processes' DBMs, synchronises their reference clocks and closes the DBM
      *
-     * @param processDbmPairs list of ProcessDbmPair objects for the whole network
+     * @param localDbms list of local DBMs for the whole network
      * @return Joined, synchronized and closed DBM still containing reference clocks
      */
-    public static DBM sync(List<ProcessDbmPair> processDbmPairs) {
-        var jointDBM = DBM.joinDbms(processDbmPairs);
+    public static DBM sync(List<DBM> localDbms) {
+        var jointDBM = DBM.joinDbms(localDbms);
 
-        for (int i = 0; i < processDbmPairs.size() - 1; i++) {
-            for (int j = i + 1; j < processDbmPairs.size(); j++) {
-                jointDBM.and(ClockConstrs.Eq(processDbmPairs.get(i).processDbm().getLastVarDecl(), processDbmPairs.get(j).processDbm().getLastVarDecl(), 0));
+        for (int i = 0; i < localDbms.size() - 1; i++) {
+            for (int j = i + 1; j < localDbms.size(); j++) {
+                jointDBM.and(ClockConstrs.Eq(localDbms.get(i).getLastVarDecl(), localDbms.get(j).getLastVarDecl(), 0));
             }
         }
 
@@ -150,18 +145,18 @@ public final class DBM {
      * Removes the reference clocks from the DBM based on the original dbms. Because theta uses standard zones,
      * removing the reference clocks of a closed matrix creates a global zone.
      *
-     * @param processDbmPairs list of ProcessDbmPair objects for the whole network
-     * @param syncedDBM       a DBM containing exactly the signature of every dbm in `processDbmPairs` joined without their
-     *                        zero clocks and a new zero clock created
+     * @param dbms      list of local DBMs for the whole network
+     * @param syncedDBM a DBM containing exactly the signature of every dbm in `dbms` joined without their
+     *                  zero clocks and a new zero clock created
      * @return a global zone
      */
-    public static DBM global(List<ProcessDbmPair> processDbmPairs, DBM syncedDBM) {
+    public static DBM global(List<DBM> dbms, DBM syncedDBM) {
 
         // gathering the variables necessary for the global dbm
-        List<VarDecl<RatType>> variables = processDbmPairs.stream().flatMap(pair -> {
-            var signatureCount = pair.processDbm.signature.size() - 2; // don't need the zero clock and the reference clock
+        List<VarDecl<RatType>> variables = dbms.stream().flatMap(dbm -> {
+            var signatureCount = dbm.signature.size() - 2; // don't need the zero clock and the reference clock
 
-            return pair.processDbm.signature.toList().stream()
+            return dbm.signature.toList().stream()
                     .skip(1) // skip the zero clock
                     .limit(signatureCount);
         }).toList();
@@ -197,13 +192,13 @@ public final class DBM {
         return DBM.project(current, varDeclList);
     }
 
-    public List<DBM> extractDbms(List<ProcessDbmPair> originalDbms) {
+    public List<DBM> extractDbms(List<DBM> originalDbms) {
         List<DBM> outputDbmList = new ArrayList<>();
 
-        Integer offset = 0;
+        int offset = 0;
         for (var pair : originalDbms) {
-            DBM updatedDbm = new DBM(pair.processDbm().signature, TOP_DBM_VALUES);
-            Integer size = pair.processDbm().dbm.size();
+            DBM updatedDbm = new DBM(pair.signature, TOP_DBM_VALUES);
+            int size = pair.dbm.size();
 
             for (int x = 1; x < size; ++x) {
                 for (int y = 1; y < size; ++y) {

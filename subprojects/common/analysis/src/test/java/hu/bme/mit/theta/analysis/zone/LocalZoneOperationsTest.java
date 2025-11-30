@@ -8,7 +8,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.List;
-import java.util.stream.Stream;
 
 public class LocalZoneOperationsTest {
     VarDecl<RatType> varA;
@@ -22,7 +21,7 @@ public class LocalZoneOperationsTest {
     DBM dbm1;
     DBM dbm2;
 
-    List<DBM.ProcessDbmPair> pairs;
+    List<DBM> dbms;
 
     @Before
     public void setUp() {
@@ -35,11 +34,11 @@ public class LocalZoneOperationsTest {
         //dbm2 = DBM.top(List.of(varB, varC, ref2));
         dbm2 = DBM.top(List.of(varC, ref2));
 
-        pairs = Stream.of(dbm1, dbm2).map(dbm -> new DBM.ProcessDbmPair(dbm.toString(), dbm)).toList();
+        dbms = List.of(dbm1, dbm2);
     }
 
     @Test
     public void joinDbmTest() {
-        Assert.assertEquals(List.of(dbm1, dbm2), DBM.joinDbms(pairs).extractDbms(pairs));
+        Assert.assertEquals(List.of(dbm1, dbm2), DBM.joinDbms(dbms).extractDbms(dbms));
     }
 }
