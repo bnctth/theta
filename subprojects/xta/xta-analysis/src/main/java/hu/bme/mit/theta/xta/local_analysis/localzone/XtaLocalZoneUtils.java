@@ -76,7 +76,7 @@ public final class XtaLocalZoneUtils {
         final Edge receivingEdge = action.getRecvEdge();
         final List<Loc> targetLocs = action.getTargetLocs();
 
-        List<DBM> actionDbmList = state.getDbmList();
+        List<DBM.ProcessDbmPair> actionDbmList = fixOrderedDbmList(targetLocs, state);
         DBM jointDBM = DBM.joinDbms(actionDbmList);
         applyVirtualGuards(targetLocs, jointDBM, state);
 
@@ -106,7 +106,7 @@ public final class XtaLocalZoneUtils {
         final List<Collection<Edge>> nonRecvEdgeCols = action.getNonRecvEdges();
         final List<Loc> targetLocs = action.getTargetLocs();
 
-        List<DBM> actionDbmList = state.getDbmList();
+        List<DBM.ProcessDbmPair> actionDbmList = fixOrderedDbmList(targetLocs, state);
         DBM jointDBM = DBM.joinDbms(actionDbmList);
         applyVirtualGuards(targetLocs, jointDBM, state);
 
@@ -137,6 +137,16 @@ public final class XtaLocalZoneUtils {
 
     private static boolean hasClockGuards(Edge edge) {
         return edge.getGuards().stream().anyMatch(Guard::isClockGuard);
+    }
+
+    private static List<DBM.ProcessDbmPair> fixOrderedDbmList(final List<Loc> targetLocs, final LocalZoneState zone) {
+        List<DBM.ProcessDbmPair> targetProcDbmMap = new ArrayList<>();
+        for (var loc : targetLocs)
+            targetProcDbmMap.add(new DBM.ProcessDbmPair(
+                    loc.getProc().getName(), zone.getDbmForProcess(loc.getProc()).orElseThrow()
+            ));
+
+        return targetProcDbmMap;
     }
 
     private static LocalZoneState constructNewZone(List<Loc> orderOfProcesses, List<DBM> changedDbms,
@@ -263,7 +273,7 @@ public final class XtaLocalZoneUtils {
         final Edge receivingEdge = action.getRecvEdge();
         final List<Loc> targetLocs = action.getTargetLocs();
 
-        List<DBM> actionDbmList = state.getDbmList();
+        List<DBM.ProcessDbmPair> actionDbmList = fixOrderedDbmList(sourceLocs, state);
         DBM jointDBM = DBM.joinDbms(actionDbmList);
 
         final ZoneState.Builder preStateBuilder = ZoneState.Builder.project(jointDBM);
@@ -294,7 +304,7 @@ public final class XtaLocalZoneUtils {
         final List<Loc> targetLocs = action.getTargetLocs();
         List<Loc> involvedLocs = action.getTargetLocs();
 
-        List<DBM> actionDbmList = state.getDbmList();
+        List<DBM.ProcessDbmPair> actionDbmList = fixOrderedDbmList(sourceLocs, state);
         DBM jointDBM = DBM.joinDbms(actionDbmList);
         jointDBM.close();
 
@@ -399,12 +409,18 @@ public final class XtaLocalZoneUtils {
      * @return DBM that is a global zone
      */
     public static DBM globalSync(LocalZoneState state) {
-        return DBM.global(state.getDbmList(), DBM.sync(state.getDbmList()));
+        var processDbmPairs = state.getLocalDbms().entrySet().stream()
+                .map(entry -> new DBM.ProcessDbmPair(entry.getKey().getName(), entry.getValue()))
+                .toList();
+
+        return DBM.global(processDbmPairs, DBM.sync(processDbmPairs));
     }
 
     public static LocalZoneState syncedState(final LocalZoneState state) {
         var dbmMap = state.getLocalDbms().entrySet().stream().toList();
-        var dbms = dbmMap.stream().map(Map.Entry::getValue).toList();
+        var dbms = dbmMap.stream().map(entry -> new DBM.ProcessDbmPair(entry.getKey().getName(), entry.getValue()))
+                .toList();
+
 
         var syncedDbms = DBM.sync(dbms).extractDbms(dbms).stream();
         var syncedMap = Streams.zip(dbmMap.stream(), syncedDbms,
