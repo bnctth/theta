@@ -356,20 +356,20 @@ public final class LazyXtaAbstractorConfigFactory {
             final Lens<LazyState<XtaState<Prod2State<?, LocalZoneState>>, XtaState<Prod2State<?, LocalZoneState>>>, LazyState<LocalZoneState, LocalZoneState>>
                     lens = LazyXtaLensUtils.createLazyClockLens();
             final Lattice<LocalZoneState> lattice = new LocalZoneLattice(partialOrd);
-            final Interpolator<LocalZoneState, LocalZoneState> interpolator = switch (clockStrategy.getZoneRepresentation()){
-                case LocalSyncSub -> LocalZoneSyncSubsumptionInterpolator.getInstance();
+            final Interpolator<LocalZoneState, ZoneState> interpolator = switch (clockStrategy.getZoneRepresentation()){
+                //case LocalSyncSub -> LocalZoneSyncSubsumptionInterpolator.getInstance();
                 default -> LocalZoneInterpolator.getInstance();
             };
             final Concretizer<LocalZoneState, LocalZoneState> concretizer = BasicConcretizer.create(partialOrd);
-            final InvTransFunc<LocalZoneState, XtaAction, LocalZonePrec> zoneInvTransFunc = XtaLocalZoneInvTransFunc.getInstance();
-            final LocalZonePrec prec = LocalZonePrec.of(system.getProcessClockMap());
+            final InvTransFunc<ZoneState, XtaAction, ZonePrec> zoneInvTransFunc = XtaZoneInvTransFunc.getInstance();
+            final ZonePrec prec = ZonePrec.of(system.getClockVars());
 
             switch (clockStrategy.getClockStrategy()) {
                 case BWITP:
                     return new BwItpStrategy<>(lens, lattice, interpolator, concretizer, zoneInvTransFunc, prec);
-                case FWITP:
-                    final TransFunc<LocalZoneState, XtaAction, LocalZonePrec> zoneTransFunc = XtaLocalTransFunc.getInstance();
-                    return new FwItpStrategy<>(lens, lattice, interpolator, concretizer, zoneInvTransFunc, prec, zoneTransFunc, prec);
+//                case FWITP:
+//                    final TransFunc<LocalZoneState, XtaAction, LocalZonePrec> zoneTransFunc = XtaLocalTransFunc.getInstance();
+//                    return new FwItpStrategy<>(lens, lattice, interpolator, concretizer, zoneInvTransFunc, prec, zoneTransFunc, prec);
                 default:
                     throw new AssertionError();
             }

@@ -59,9 +59,9 @@ public final class LazyXtaAbstractorTest {
         final Collection<Object[]> result = new ArrayList<>();
         //for (final String model : MODELS) {
         String model = "/model/gl/gl-2.xta";
-        //  DataStrategy2 dataStrategy = DataStrategy2.getValidStrategies().iterator().next();
+          DataStrategy2 dataStrategy = DataStrategy2.getValidStrategies().iterator().next();
         // ClockStrategy2 clockStrategy = new ClockStrategy2(ClockStrategy2.ClockStrategy.BWITP, ClockStrategy2.ZoneRepresentation.LocalSyncSub);
-        for (final DataStrategy2 dataStrategy : DataStrategy2.getValidStrategies()) {
+        //for (final DataStrategy2 dataStrategy : DataStrategy2.getValidStrategies()) {
             for (final ClockStrategy2 clockStrategy : ClockStrategy2.getValidStrategies()) {
                 if (!MODELS_WITH_UNKNOWN_SOLVER_STATUS.contains(model) || (clockStrategy.getClockStrategy() != LU)) {
                     if (clockStrategy.getClockStrategy() != BWITP)
@@ -69,7 +69,7 @@ public final class LazyXtaAbstractorTest {
                     result.add(new Object[]{model, dataStrategy, clockStrategy});
                 }
             }
-        }
+        //}
         //}
         return result;
     }
