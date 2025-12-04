@@ -47,6 +47,10 @@ public class LocalZoneState implements ExprState {
         DBM dbmCalc(final DBM lhs, final DBM rhs);
     }
 
+    public List<DBM> getDbmList() {
+        return new ArrayList<>(localDBMs.values());
+    }
+
     private static final int HASH_SEED = 4349;
 
     private volatile int hashCode = 0;
@@ -471,6 +475,5 @@ public class LocalZoneState implements ExprState {
             return this;
         }
     }
-
 
 }

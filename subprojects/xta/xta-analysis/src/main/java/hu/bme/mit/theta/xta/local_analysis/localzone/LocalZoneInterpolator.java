@@ -25,14 +25,15 @@ public final class LocalZoneInterpolator implements Interpolator<LocalZoneState,
 
     @Override
     public ZoneState toItpDom(final LocalZoneState state) {
-        var jointDBM = DBM.joinDbms(state.getDbmList());
+        var jointDBM = DBM.joinDbms(state.getDbmList().stream().map(dbm->new DBM.ProcessDbmPair("", dbm)).toList());
         return ZoneState.Builder.project(jointDBM).build();
     }
 
     @Override
     public LocalZoneState interpolate(final LocalZoneState lhs, final ZoneState rhs) {
         var globalInterpolant = ZoneState.interpolant(toItpDom(lhs), rhs);
-        var dbms = globalInterpolant.transform().getDbm().extractDbms(lhs.getDbmList());
+        var jointDbmForSignature=DBM.joinDbms(lhs.getDbmList().stream().map(dbm->new DBM.ProcessDbmPair("", dbm)).toList());;
+        var dbms = DBM.project(globalInterpolant.transform().getDbm(), jointDbmForSignature.signature).extractDbms(lhs.getDbmList().stream().map(dbm->new DBM.ProcessDbmPair("", dbm)).toList());
         Map<XtaProcess, DBM> mappedDbms = IntStream.range(0, lhs.getDbmList().size()).boxed()
                 .map(i -> Tuple2.of(List.copyOf(lhs.getLocalDbms().keySet()).get(i), dbms.get(i)))
                 .collect(Collectors.toMap(Tuple2::get1, Tuple2::get2));
