@@ -16,6 +16,7 @@
 package hu.bme.mit.theta.xta;
 
 import hu.bme.mit.theta.common.container.Containers;
+import hu.bme.mit.theta.core.decl.Decls;
 import hu.bme.mit.theta.core.decl.VarDecl;
 import hu.bme.mit.theta.core.model.MutableValuation;
 import hu.bme.mit.theta.core.model.Valuation;
@@ -26,7 +27,6 @@ import hu.bme.mit.theta.core.type.rattype.RatType;
 import hu.bme.mit.theta.core.utils.ExprUtils;
 import hu.bme.mit.theta.xta.XtaProcess.Loc;
 
-import java.lang.management.LockInfo;
 import java.util.*;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -38,7 +38,7 @@ public final class XtaSystem {
 	private final Collection<VarDecl<?>> dataVars;
 	private final Collection<VarDecl<RatType>> clockVars;
 	private final MutableValuation initVal;
-    private final HashMap<XtaProcess, Collection<VarDecl<RatType>>> processClockMap;
+    private final HashMap<XtaProcess, List<VarDecl<RatType>>> processClockMap;
 
 	private final List<XtaProcess> unmodProcesses;
 	private final Collection<VarDecl<?>> unmodDataVars;
@@ -158,14 +158,17 @@ public final class XtaSystem {
         // the `checkNotNull` function throws an exception which should be handled
         // however exception handling is expensive, also here it's a valid scenario
         // to get a null for processClocks, hence the manual null checking.
-        Collection<VarDecl<RatType>> processClocks = processClockMap.get(process);
-        if(processClocks != null)
-            processClocks.add(varDecl);
+        List<VarDecl<RatType>> processClocks = processClockMap.get(process);
+        if (processClocks != null)
+            processClocks.add(processClocks.size() - 1, varDecl);
         else {
-            // This could be done in one line, but java sucks
-            HashSet<VarDecl<RatType>> inputClockSet = new HashSet<>();
-            inputClockSet.add(varDecl);
-            processClockMap.put(process, Containers.createSet(inputClockSet));
+            processClockMap.put(process, new ArrayList<>(List.of(varDecl, Decls.Var("LocalRefClock_" + process.getName(), RatType.getInstance()))));
         }
+    }
+
+    public Collection<VarDecl<RatType>> getRefClocks() {
+        return processClockMap.values().stream()
+                .map(vars -> vars.get(vars.size() - 1))
+                .toList();
     }
 }

@@ -1,11 +1,11 @@
 package hu.bme.mit.theta.xta.local_analysis.localzone;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import hu.bme.mit.theta.analysis.InitFunc;
 
 import java.util.Collection;
 import java.util.Collections;
 
-import hu.bme.mit.theta.analysis.InitFunc;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class XtaLocalInitFunc implements InitFunc<LocalZoneState, LocalZonePrec> {
 
@@ -21,6 +21,6 @@ public final class XtaLocalInitFunc implements InitFunc<LocalZoneState, LocalZon
     @Override
     public Collection<? extends LocalZoneState> getInitStates(LocalZonePrec prec) {
         checkNotNull(prec);
-        return Collections.singleton(LocalZoneState.zero(prec.getMapping(), true).transform().up().build());
+        return Collections.singleton(LocalZoneState.zero(prec.getMapping(), false).transform().up().build());
     }
 }

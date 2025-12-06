@@ -37,6 +37,7 @@ import hu.bme.mit.theta.xta.analysis.zone.lu.LuZoneState;
 import hu.bme.mit.theta.xta.local_analysis.localzone.*;
 
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import static hu.bme.mit.theta.core.type.booltype.BoolExprs.True;
 import static hu.bme.mit.theta.xta.analysis.lazy.LazyXtaLensUtils.createConcrProd2Lens;
@@ -355,14 +356,14 @@ public final class LazyXtaAbstractorConfigFactory {
 
             final Lens<LazyState<XtaState<Prod2State<?, LocalZoneState>>, XtaState<Prod2State<?, LocalZoneState>>>, LazyState<LocalZoneState, LocalZoneState>>
                     lens = LazyXtaLensUtils.createLazyClockLens();
-            final Lattice<LocalZoneState> lattice = new LocalZoneLattice(partialOrd);
+            final Lattice<LocalZoneState> lattice = new LocalZoneLattice(partialOrd, system.getProcessClockMap());
             final Interpolator<LocalZoneState, ZoneState> interpolator = switch (clockStrategy.getZoneRepresentation()){
                 //case LocalSyncSub -> LocalZoneSyncSubsumptionInterpolator.getInstance();
                 default -> LocalZoneInterpolator.getInstance();
             };
             final Concretizer<LocalZoneState, LocalZoneState> concretizer = BasicConcretizer.create(partialOrd);
-            final InvTransFunc<ZoneState, XtaAction, ZonePrec> zoneInvTransFunc = XtaZoneInvTransFunc.getInstance();
-            final ZonePrec prec = ZonePrec.of(system.getClockVars());
+            final InvTransFunc<ZoneState, XtaAction, ZonePrec> zoneInvTransFunc = new XtaSynchronizedGlobalInvTransFunc(system.getRefClocks());
+            final ZonePrec prec = ZonePrec.of(Stream.concat(system.getClockVars().stream(), system.getRefClocks().stream()).toList());
 
             switch (clockStrategy.getClockStrategy()) {
                 case BWITP:

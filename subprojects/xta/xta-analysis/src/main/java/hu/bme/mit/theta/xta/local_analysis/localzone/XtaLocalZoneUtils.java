@@ -289,9 +289,10 @@ public final class XtaLocalZoneUtils {
         applySyncGuards(preStateBuilder, emittingEdge);
         applySyncInvariants(preStateBuilder, sourceLocs);
 
+        jointDBM = preStateBuilder.getDbm();
         applyVirtualGuards(targetLocs, jointDBM, state);
 
-        return constructNewZone(targetLocs, preStateBuilder.getDbm().extractDbms(actionDbmList), state);
+        return constructNewZone(targetLocs, jointDBM.extractDbms(actionDbmList), state);
     }
 
     private static LocalZoneState preForBroadcastAction(final LocalZoneState state,

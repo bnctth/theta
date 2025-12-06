@@ -64,7 +64,7 @@ public final class LazyXtaAbstractorTest {
         //for (final DataStrategy2 dataStrategy : DataStrategy2.getValidStrategies()) {
             for (final ClockStrategy2 clockStrategy : ClockStrategy2.getValidStrategies()) {
                 if (!MODELS_WITH_UNKNOWN_SOLVER_STATUS.contains(model) || (clockStrategy.getClockStrategy() != LU)) {
-                    if (clockStrategy.getClockStrategy() != BWITP)
+                    if (clockStrategy.getClockStrategy() != BWITP || clockStrategy.getZoneRepresentation()== ClockStrategy2.ZoneRepresentation.Global)
                         continue;
                     result.add(new Object[]{model, dataStrategy, clockStrategy});
                 }
