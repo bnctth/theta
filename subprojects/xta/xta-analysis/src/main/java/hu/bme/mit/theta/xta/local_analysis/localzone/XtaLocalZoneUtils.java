@@ -222,8 +222,8 @@ public final class XtaLocalZoneUtils {
     }
 
     private static void applySyncInverseDelay(final ZoneState.Builder builder) {
-        builder.nonnegative();
         builder.down();
+        builder.nonnegative();
     }
 
 
@@ -266,8 +266,9 @@ public final class XtaLocalZoneUtils {
         return preStateBuilder.build();
     }
 
-    private static LocalZoneState preForBinaryAction(final LocalZoneState state, final BinaryXtaAction action,
+    private static LocalZoneState preForBinaryAction(LocalZoneState state, final BinaryXtaAction action,
                                                      final LocalZonePrec prec) {
+        state=state.project(prec.getMapping()).build();
         final List<Loc> sourceLocs = action.getSourceLocs();
         final Edge emittingEdge = action.getEmitEdge();
         final Edge receivingEdge = action.getRecvEdge();
@@ -295,9 +296,10 @@ public final class XtaLocalZoneUtils {
         return constructNewZone(targetLocs, jointDBM.extractDbms(actionDbmList), state);
     }
 
-    private static LocalZoneState preForBroadcastAction(final LocalZoneState state,
+    private static LocalZoneState preForBroadcastAction(LocalZoneState state,
                                                         final BroadcastXtaAction action,
                                                         final LocalZonePrec prec) {
+        state=state.project(prec.getMapping()).build();
         final List<Loc> sourceLocs = action.getSourceLocs();
         final Edge emitEdge = action.getEmitEdge();
         final List<Edge> reverseRecvEdges = Lists.reverse(action.getRecvEdges());
