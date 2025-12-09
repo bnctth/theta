@@ -363,7 +363,7 @@ public final class LazyXtaAbstractorConfigFactory {
             };
             final Concretizer<LocalZoneState, LocalZoneState> concretizer = BasicConcretizer.create(partialOrd);
             final InvTransFunc<ZoneState, XtaAction, ZonePrec> zoneInvTransFunc = new XtaSynchronizedGlobalInvTransFunc(system.getRefClocks());
-            final ZonePrec prec = ZonePrec.of(Stream.concat(system.getClockVars().stream(), system.getRefClocks().stream()).toList());
+            final ZonePrec prec = ZonePrec.of(Stream.concat(system.getClockVars().stream(), system.getRefClocks().values().stream()).toList());
 
             switch (clockStrategy.getClockStrategy()) {
                 case BWITP:

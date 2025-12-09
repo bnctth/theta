@@ -12,6 +12,7 @@ import hu.bme.mit.theta.core.decl.VarDecl;
 import hu.bme.mit.theta.core.type.rattype.RatType;
 import hu.bme.mit.theta.xta.Guard;
 import hu.bme.mit.theta.xta.Update;
+import hu.bme.mit.theta.xta.XtaProcess;
 import hu.bme.mit.theta.xta.XtaProcess.Edge;
 import hu.bme.mit.theta.xta.XtaProcess.Loc;
 import hu.bme.mit.theta.xta.XtaProcess.LocKind;
@@ -75,10 +76,11 @@ public final class XtaLocalZoneUtils {
         final Edge emittingEdge = action.getEmitEdge();
         final Edge receivingEdge = action.getRecvEdge();
         final List<Loc> targetLocs = action.getTargetLocs();
+        final List<XtaProcess> involvedProcesses = involvedProcesses(action);
 
         List<DBM.ProcessDbmPair> actionDbmList = fixOrderedDbmList(targetLocs, state);
         DBM jointDBM = DBM.joinDbms(actionDbmList);
-        applyVirtualGuards(targetLocs, jointDBM, state);
+        applyVirtualGuards(involvedProcesses, jointDBM, state);
 
 
         final ZoneState.Builder succStateBuilder = ZoneState.Builder.project(jointDBM);
@@ -105,10 +107,11 @@ public final class XtaLocalZoneUtils {
         final List<Edge> recvEdges = action.getRecvEdges();
         final List<Collection<Edge>> nonRecvEdgeCols = action.getNonRecvEdges();
         final List<Loc> targetLocs = action.getTargetLocs();
+        final List<XtaProcess> involvedProcesses = involvedProcesses(action);
 
         List<DBM.ProcessDbmPair> actionDbmList = fixOrderedDbmList(targetLocs, state);
         DBM jointDBM = DBM.joinDbms(actionDbmList);
-        applyVirtualGuards(targetLocs, jointDBM, state);
+        applyVirtualGuards(involvedProcesses, jointDBM, state);
 
         final ZoneState.Builder succStateBuilder = ZoneState.Builder.project(jointDBM);
         applySyncInvariants(succStateBuilder, sourceLocs);
@@ -157,17 +160,12 @@ public final class XtaLocalZoneUtils {
         return newState;
     }
 
-    private static void applyVirtualGuards(final List<Loc> locs, DBM jointDBM, LocalZoneState state) {
-        Integer index = 0;
-        Integer slidingIndex = 1;
-
-        for (; slidingIndex < locs.size(); ) {
-            DBM firstDbm = state.getDbmForProcess(locs.get(index).getProc()).get();
-            DBM secondDbm = state.getDbmForProcess(locs.get(slidingIndex).getProc()).get();
+    private static void applyVirtualGuards(final List<XtaProcess> processes, final DBM jointDBM, final LocalZoneState state) {
+        for (int i = 0; i < processes.size() - 1; i++) {
+            DBM firstDbm = state.getDbmForProcess(processes.get(i)).orElseThrow();
+            DBM secondDbm = state.getDbmForProcess(processes.get(i + 1)).orElseThrow();
 
             jointDBM.and(ClockConstrs.Eq(firstDbm.getLastVarDecl(), secondDbm.getLastVarDecl(), 0));
-            index++;
-            slidingIndex++;
         }
     }
 
@@ -268,11 +266,12 @@ public final class XtaLocalZoneUtils {
 
     private static LocalZoneState preForBinaryAction(LocalZoneState state, final BinaryXtaAction action,
                                                      final LocalZonePrec prec) {
-        state=state.project(prec.getMapping()).build();
+        state = state.project(prec.getMapping()).build();
         final List<Loc> sourceLocs = action.getSourceLocs();
         final Edge emittingEdge = action.getEmitEdge();
         final Edge receivingEdge = action.getRecvEdge();
         final List<Loc> targetLocs = action.getTargetLocs();
+        final List<XtaProcess> involvedProcesses = involvedProcesses(action);
 
         List<DBM.ProcessDbmPair> actionDbmList = fixOrderedDbmList(sourceLocs, state);
         DBM jointDBM = DBM.joinDbms(actionDbmList);
@@ -291,7 +290,7 @@ public final class XtaLocalZoneUtils {
         applySyncInvariants(preStateBuilder, sourceLocs);
 
         jointDBM = preStateBuilder.getDbm();
-        applyVirtualGuards(targetLocs, jointDBM, state);
+        applyVirtualGuards(involvedProcesses, jointDBM, state);
 
         return constructNewZone(targetLocs, jointDBM.extractDbms(actionDbmList), state);
     }
@@ -299,13 +298,14 @@ public final class XtaLocalZoneUtils {
     private static LocalZoneState preForBroadcastAction(LocalZoneState state,
                                                         final BroadcastXtaAction action,
                                                         final LocalZonePrec prec) {
-        state=state.project(prec.getMapping()).build();
+        state = state.project(prec.getMapping()).build();
         final List<Loc> sourceLocs = action.getSourceLocs();
         final Edge emitEdge = action.getEmitEdge();
         final List<Edge> reverseRecvEdges = Lists.reverse(action.getRecvEdges());
         final List<Collection<Edge>> nonRecvEdgeCols = action.getNonRecvEdges();
         final List<Loc> targetLocs = action.getTargetLocs();
         List<Loc> involvedLocs = action.getTargetLocs();
+        final List<XtaProcess> involvedProcesses = involvedProcesses(action);
 
         List<DBM.ProcessDbmPair> actionDbmList = fixOrderedDbmList(sourceLocs, state);
         DBM jointDBM = DBM.joinDbms(actionDbmList);
@@ -336,7 +336,7 @@ public final class XtaLocalZoneUtils {
 
         jointDBM = preStateBuilder.getDbm();
 
-        applyVirtualGuards(targetLocs, jointDBM, state);
+        applyVirtualGuards(involvedProcesses, jointDBM, state);
 
         return constructNewZone(targetLocs, jointDBM.extractDbms(actionDbmList), state);
     }
@@ -431,6 +431,22 @@ public final class XtaLocalZoneUtils {
         ).collect(Collectors.toMap(Tuple2::get1, Tuple2::get2));
 
         return new LocalZoneState(syncedMap);
+    }
+
+    public static List<XtaProcess> involvedProcesses(final XtaAction action) {
+        if (action.isBasic()) {
+            var basicAction = action.asBasic();
+            return List.of(basicAction.getEdge().getSource().getProc());
+        } else if (action.isBinary()) {
+            var binaryAction = action.asBinary();
+            return List.of(binaryAction.getEmitEdge().getSource().getProc(), binaryAction.getRecvEdge().getSource().getProc());
+        } else if (action.isBroadcast()) {
+            var broadcastAction = action.asBroadcast();
+            var result = broadcastAction.getRecvEdges().stream().map(edge -> edge.getSource().getProc()).collect(Collectors.toCollection(ArrayList::new));
+            result.add(broadcastAction.getEmitEdge().getSource().getProc());
+            return result;
+        }
+        throw new IllegalArgumentException("Invalid action type");
     }
 
 
