@@ -19,6 +19,7 @@ import com.google.common.collect.Iterables;
 import hu.bme.mit.theta.analysis.expr.ExprState;
 import hu.bme.mit.theta.common.Utils;
 import hu.bme.mit.theta.core.clock.constr.ClockConstr;
+import hu.bme.mit.theta.core.clock.constr.ClockConstrs;
 import hu.bme.mit.theta.core.clock.op.ClockOp;
 import hu.bme.mit.theta.core.decl.VarDecl;
 import hu.bme.mit.theta.core.model.Valuation;
@@ -28,9 +29,7 @@ import hu.bme.mit.theta.core.type.rattype.RatLitExpr;
 import hu.bme.mit.theta.core.type.rattype.RatType;
 
 import java.math.BigInteger;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static hu.bme.mit.theta.core.clock.constr.ClockConstrs.Eq;
@@ -221,6 +220,20 @@ public final class ZoneState implements ExprState {
 		final Collection<ClockConstr> constrs = dbm.getConstrs();
 		return Utils.lispStringBuilder(getClass().getSimpleName()).aligned().addAll(constrs).toString();
 	}
+
+    /**
+     * Synchronizes a global zone containing all the supplied refclocks.
+     *
+     * @return
+     */
+    public ZoneState sync(List<VarDecl<RatType>> refClocks) {
+        List<ClockConstr> virtualGuards = new ArrayList<>(refClocks.size() - 1);
+        for (int i = 0; i < refClocks.size() - 1; i++) {
+            virtualGuards.add(ClockConstrs.Eq(refClocks.get(i), refClocks.get(i + 1), 0));
+        }
+        var virtualGuard = ClockConstrs.And(virtualGuards);
+        return this.transform().and(virtualGuard).build();
+    }
 
 	////////
 

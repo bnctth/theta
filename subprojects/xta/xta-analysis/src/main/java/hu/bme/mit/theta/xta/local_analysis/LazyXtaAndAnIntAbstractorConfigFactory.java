@@ -18,6 +18,7 @@ import hu.bme.mit.theta.analysis.prod2.Prod2Analysis;
 import hu.bme.mit.theta.analysis.prod2.Prod2Prec;
 import hu.bme.mit.theta.analysis.prod2.Prod2State;
 import hu.bme.mit.theta.analysis.unit.UnitPrec;
+import hu.bme.mit.theta.analysis.zone.ZonePrec;
 import hu.bme.mit.theta.analysis.zone.ZoneState;
 import hu.bme.mit.theta.common.Tuple3;
 import hu.bme.mit.theta.core.utils.Lens;
@@ -37,6 +38,7 @@ import hu.bme.mit.theta.xta.analysis.zone.lu.LuZoneState;
 import hu.bme.mit.theta.xta.local_analysis.localzone.*;
 
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static hu.bme.mit.theta.core.type.booltype.BoolExprs.True;
@@ -320,36 +322,36 @@ public final class LazyXtaAndAnIntAbstractorConfigFactory {
 
         private LazyStrategy<LocalZoneState, LocalZoneState, LazyState<XtaAndAnIntState<Prod2State<?, LocalZoneState>>, XtaAndAnIntState<Prod2State<?, LocalZoneState>>>, XtaAndAnIntAction>
         createLazyLocalZoneStrategy(final XtaSystem system, final ClockStrategy2 clockStrategy) {
-            throw new UnsupportedOperationException();
-        }
 
-//            final PartialOrd<LocalZoneState> partialOrd = switch (clockStrategy.getZoneRepresentation()) {
-//                case Global ->
-//                        throw new AssertionError("This method must not be called with global zone representation");
-//                case Local -> LocalZoneOrd.getInstance();
-//                case LocalSyncSub -> LocalZoneSyncSubsumptionOrd.getInstance();
-//            };
-//
-//            final Lens<LazyState<XtaAndAnIntState<Prod2State<?, LocalZoneState>>, XtaAndAnIntState<Prod2State<?, LocalZoneState>>>, LazyState<LocalZoneState, LocalZoneState>>
-//                    lens = LazyXtaLensConverter.of(LazyXtaLensUtils.createLazyClockLens());
-//            final Lattice<LocalZoneState> lattice = new LocalZoneLattice(partialOrd);
-//            final Interpolator<LocalZoneState, ZoneState> interpolator = switch (clockStrategy.getZoneRepresentation()) {
-//                case LocalSyncSub -> LocalZoneSyncSubsumptionInterpolator.getInstance();
-//                default -> LocalZoneInterpolator.getInstance();
-//            };
-//            final Concretizer<LocalZoneState, LocalZoneState> concretizer = BasicConcretizer.create(partialOrd);
-//            final InvTransFunc<LocalZoneState, XtaAndAnIntAction, LocalZonePrec> zoneInvTransFunc = (LocalZoneState state, XtaAndAnIntAction action, LocalZonePrec prec) -> XtaLocalZoneInvTransFunc.getInstance().getPreStates(state, action.getAction(), prec);
-//            final LocalZonePrec prec = LocalZonePrec.of(system.getProcessClockMap());
-//
-//            switch (clockStrategy.getClockStrategy()) {
-//                case BWITP:
-//                    return new BwItpStrategy<>(lens, lattice, interpolator, concretizer, zoneInvTransFunc, prec);
+
+            final PartialOrd<LocalZoneState> partialOrd = switch (clockStrategy.getZoneRepresentation()) {
+                case Global ->
+                        throw new AssertionError("This method must not be called with global zone representation");
+                case Local -> LocalZoneOrd.getInstance();
+                case LocalSyncSub -> LocalZoneSyncSubsumptionOrd.getInstance();
+            };
+
+            final Lens<LazyState<XtaAndAnIntState<Prod2State<?, LocalZoneState>>, XtaAndAnIntState<Prod2State<?, LocalZoneState>>>, LazyState<LocalZoneState, LocalZoneState>>
+                    lens = LazyXtaLensConverter.of(LazyXtaLensUtils.createLazyClockLens());
+            final Lattice<LocalZoneState> lattice = new LocalZoneLattice(partialOrd, system.getProcessClockMap());
+            final Interpolator<LocalZoneState, ZoneState> interpolator = switch (clockStrategy.getZoneRepresentation()) {
+                case LocalSyncSub -> new LocalZoneSyncSubInterpolator(system.getRefClocks().values().stream().toList());
+                default -> LocalZoneInterpolator.getInstance();
+            };
+            final Concretizer<LocalZoneState, LocalZoneState> concretizer = BasicConcretizer.create(partialOrd);
+            final var innerInvTransFunc = new XtaSynchronizedGlobalInvTransFunc(system.getRefClocks());
+            final InvTransFunc<ZoneState, XtaAndAnIntAction, ZonePrec> zoneInvTransFunc = (ZoneState state, XtaAndAnIntAction action, ZonePrec prec) -> innerInvTransFunc.getPreStates(state, action.getAction(), prec);
+            final ZonePrec prec = ZonePrec.of(Stream.concat(system.getClockVars().stream(), system.getRefClocks().values().stream()).toList());
+
+            switch (clockStrategy.getClockStrategy()) {
+                case BWITP:
+                    return new BwItpStrategy<>(lens, lattice, interpolator, concretizer, zoneInvTransFunc, prec);
 //                case FWITP:
 //                    final TransFunc<LocalZoneState, XtaAndAnIntAction, LocalZonePrec> zoneTransFunc = (LocalZoneState state, XtaAndAnIntAction action, LocalZonePrec p) -> XtaLocalTransFunc.getInstance().getSuccStates(state, action.getAction(), p);
 //                    return new FwItpStrategy<>(lens, lattice, interpolator, concretizer, zoneInvTransFunc, prec, zoneTransFunc, prec);
-//                default:
-//                    throw new AssertionError();
-//            }
-//        }
+                default:
+                    throw new AssertionError();
+            }
+        }
     }
 }

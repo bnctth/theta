@@ -21,6 +21,7 @@ import hu.bme.mit.theta.analysis.expr.ExprState;
 import hu.bme.mit.theta.analysis.zone.BoundFunc;
 import hu.bme.mit.theta.analysis.zone.DBM;
 import hu.bme.mit.theta.analysis.zone.DbmRelation;
+import hu.bme.mit.theta.analysis.zone.ZoneState;
 import hu.bme.mit.theta.common.Tuple2;
 import hu.bme.mit.theta.common.Utils;
 import hu.bme.mit.theta.common.container.Containers;
@@ -355,6 +356,19 @@ public class LocalZoneState implements ExprState {
         }
 
         return true;
+    }
+
+    /**
+     * Joins the DBMs into a single one and creates a {@link ZoneState} out of it. Performs no synchronization and keeps
+     * refclocks.
+     *
+     * @return
+     */
+    public ZoneState jointGlobalZone() {
+        var pairs = localDBMs.values().stream().map(dbm -> new DBM.ProcessDbmPair("", dbm)).toList();
+        var jointDbm = DBM.joinDbms(pairs);
+        jointDbm.close();
+        return ZoneState.Builder.project(jointDbm).build();
     }
 
     /// /////

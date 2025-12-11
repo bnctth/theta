@@ -26,6 +26,7 @@ public final class LocalZoneInterpolator implements Interpolator<LocalZoneState,
     @Override
     public ZoneState toItpDom(final LocalZoneState state) {
         var jointDBM = DBM.joinDbms(state.getDbmList().stream().map(dbm->new DBM.ProcessDbmPair("", dbm)).toList());
+        jointDBM.close();
         return ZoneState.Builder.project(jointDBM).build();
     }
 
